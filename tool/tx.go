@@ -7,8 +7,16 @@ import (
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	ctx "github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	ctypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	asigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	atypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/osmosis-labs/osmosis/v11/app"
@@ -20,7 +28,14 @@ import (
 	"strconv"
 )
 
-var Ccontext = client.Context{}.WithChainID("osmosis-1")
+const (
+	GAS_LIMIT           = 100000
+	GRPC_SERVER_ADDRESS = "grpc.osmosis.zone:9090"
+	CHAIN_ID            = "osmosis-1"
+	ACCOUNT_ADDR        = "osmo16kydz6vznpgtpgws733panrs6atdsefcfxa97j"
+)
+
+var Ccontext = client.Context{}.WithChainID(CHAIN_ID)
 
 func InitContext() {
 	encodingConfig := app.MakeEncodingConfig()
@@ -30,12 +45,11 @@ func InitContext() {
 		WithLegacyAmino(encodingConfig.Amino).
 		WithInput(os.Stdin).
 		WithAccountRetriever(atypes.AccountRetriever{}).
-		WithBroadcastMode(flags.BroadcastBlock).
+		WithBroadcastMode(flags.BroadcastSync).
 		WithViper("OSMOSIS")
 	conf := sdk.GetConfig()
 	conf.SetBech32PrefixForAccount("osmo", "osmopub")
 }
-
 func QueryAccountInfo(ctx context.Context, address string) (*module.AccountInfo, error) {
 	myAddress, err := sdk.AccAddressFromBech32(address)
 	if err != nil {
@@ -44,8 +58,8 @@ func QueryAccountInfo(ctx context.Context, address string) (*module.AccountInfo,
 
 	// Create a connection to the gRPC server.
 	grpcConn, _ := grpc.Dial(
-		"grpc.osmosis.zone:9090", // your gRPC server address.
-		grpc.WithInsecure(),      // The SDK doesn't support any transport security mechanism.
+		GRPC_SERVER_ADDRESS, // your gRPC server address.
+		grpc.WithInsecure(), // The SDK doesn't support any transport security mechanism.
 	)
 	defer func(grpcConn *grpc.ClientConn) {
 		err := grpcConn.Close()
@@ -80,8 +94,8 @@ func QueryBalanceInfo(ctx context.Context, address string) (*module.Balances, er
 
 	// Create a connection to the gRPC server.
 	grpcConn, _ := grpc.Dial(
-		"grpc.osmosis.zone:9090", // your gRPC server address.
-		grpc.WithInsecure(),      // The SDK doesn't support any transport security mechanism.
+		GRPC_SERVER_ADDRESS, // your gRPC server address.
+		grpc.WithInsecure(), // The SDK doesn't support any transport security mechanism.
 	)
 	defer func(grpcConn *grpc.ClientConn) {
 		err := grpcConn.Close()
@@ -114,8 +128,8 @@ func QueryBalanceInfo(ctx context.Context, address string) (*module.Balances, er
 func QueryPoolInfo(ctx context.Context) (*module.Pools, error) {
 	// Create a connection to the gRPC server.
 	grpcConn, _ := grpc.Dial(
-		"grpc.osmosis.zone:9090", // your gRPC server address.
-		grpc.WithInsecure(),      // The SDK doesn't support any transport security mechanism.
+		GRPC_SERVER_ADDRESS, // your gRPC server address.
+		grpc.WithInsecure(), // The SDK doesn't support any transport security mechanism.
 	)
 	defer func(grpcConn *grpc.ClientConn) {
 		err := grpcConn.Close()
@@ -151,17 +165,11 @@ func QueryPoolInfo(ctx context.Context) (*module.Pools, error) {
 }
 
 // NewBuildSwapExactAmountInMsg tokenInStr Expected format: "{amount}{denomination}"
-func NewBuildSwapExactAmountInMsg(addr, tokenInStr, tokenOutMinAmtStr string, routerids, routerdenoms []string) (sdk.Msg, error) {
+func NewBuildSwapExactAmountInMsg(addr string, tokenIn sdk.Coin, tokenOutMinAmtStr string, routerids, routerdenoms []string) (sdk.Msg, error) {
 	routes, err := swapAmountInRoutes(routerids, routerdenoms)
 	if err != nil {
 		return nil, err
 	}
-
-	tokenIn, err := sdk.ParseCoinNormalized(tokenInStr)
-	if err != nil {
-		return nil, err
-	}
-
 	tokenOutMinAmt, ok := sdk.NewIntFromString(tokenOutMinAmtStr)
 	if !ok {
 		return nil, errors.New("invalid token out min amount")
@@ -192,4 +200,112 @@ func swapAmountInRoutes(ids, denoms []string) ([]types.SwapAmountInRoute, error)
 		})
 	}
 	return routes, nil
+}
+
+func SignTx(txBuilder client.TxBuilder, priv ctypes.PrivKey, sequence uint64, accountNum uint64, msg sdk.Msg) error {
+	sigV2 := signing.SignatureV2{
+		PubKey: priv.PubKey(),
+		Data: &signing.SingleSignatureData{
+			SignMode:  Ccontext.TxConfig.SignModeHandler().DefaultMode(),
+			Signature: nil,
+		},
+		Sequence: sequence,
+	}
+	err := txBuilder.SetSignatures(sigV2)
+	if err != nil {
+		return err
+	}
+	signerData := asigning.SignerData{
+		ChainID:       CHAIN_ID,
+		AccountNumber: accountNum,
+		Sequence:      sequence,
+	}
+	sigV2, err = ctx.SignWithPrivKey(Ccontext.TxConfig.SignModeHandler().DefaultMode(), signerData, txBuilder, priv, Ccontext.TxConfig, sequence)
+	if err != nil {
+		return err
+	}
+	if err = txBuilder.SetSignatures(sigV2); err != nil {
+		return err
+	}
+	if err = txBuilder.SetMsgs(msg); err != nil {
+		return err
+	}
+	return nil
+}
+
+func SendOsmoTx(ctx context.Context, mnemonic, tokenInDemon, tokenOutMinAmtStr string, tokenInAmount int64, sequence, accnum uint64,
+	routerids, routerdenoms []string) error {
+	txBuilder := Ccontext.TxConfig.NewTxBuilder()
+	txBuilder.SetGasLimit(GAS_LIMIT)
+	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewInt64Coin("uosmo", 2000)))
+	priv, err := NewPrivateKeyByMnemonic(mnemonic)
+	if err != nil {
+		return err
+	}
+	tokenInStr := sdk.NewInt64Coin(tokenInDemon, tokenInAmount)
+	msg, err := NewBuildSwapExactAmountInMsg(ACCOUNT_ADDR, tokenInStr, tokenOutMinAmtStr, routerids, routerdenoms)
+	if err != nil {
+		return err
+	}
+	if err = SignTx(txBuilder, priv, sequence, accnum, msg); err != nil {
+		return err
+	}
+	txBytes, err := Ccontext.TxConfig.TxEncoder()(txBuilder.GetTx())
+	if err != nil {
+		return err
+	}
+	txJSONBytes, err := Ccontext.TxConfig.TxJSONEncoder()(txBuilder.GetTx())
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(txJSONBytes))
+	grpcConn, err := grpc.Dial(
+		GRPC_SERVER_ADDRESS, // Or your gRPC server address.
+		grpc.WithInsecure(), // The SDK doesn't support any transport security mechanism.
+	)
+	if err != nil {
+		return err
+	}
+	txClient := tx.NewServiceClient(grpcConn)
+	grpcRes, err := txClient.BroadcastTx(
+		ctx,
+		&tx.BroadcastTxRequest{
+			Mode:    tx.BroadcastMode_BROADCAST_MODE_SYNC,
+			TxBytes: txBytes, // Proto-binary of the signed transaction, see previous step.
+		},
+	)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(grpcRes.TxResponse)
+	defer grpcConn.Close()
+	return nil
+}
+
+func NewPrivateKeyByMnemonic(mnemonic string) (ctypes.PrivKey, error) {
+	algo, err := keyring.NewSigningAlgoFromString(string(hd.Secp256k1Type), keyring.SigningAlgoList{hd.Secp256k1})
+	if err != nil {
+		return nil, err
+	}
+
+	// create master key and derive first key for keyring
+	prvbz, err := algo.Derive()(mnemonic, "", hd.CreateHDPath(118, 0, 0).String())
+	if err != nil {
+		return nil, err
+	}
+	prv := algo.Generate()(prvbz)
+	return prv, nil
+}
+
+func PrivateToOsmoAddress(prv ctypes.PrivKey) (string, error) {
+	addr, err := sdk.AccAddressFromHex(prv.PubKey().Address().String())
+	if err != nil {
+		return "", err
+	}
+	addr2, err := bech32.ConvertAndEncode("osmo", addr)
+	if err != nil {
+		return "", err
+	}
+	return addr2, nil
 }
