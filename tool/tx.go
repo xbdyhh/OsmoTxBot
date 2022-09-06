@@ -51,7 +51,7 @@ func InitCcontext() {
 	conf := sdk.GetConfig()
 	conf.SetBech32PrefixForAccount("osmo", "osmopub")
 }
-func QueryAccountInfo(ctx *MyContext, address string) (*module.AccountInfo, error) {
+func QueryOsmoAccountInfo(ctx *MyContext, address string) (*module.AccountInfo, error) {
 	myAddress, err := sdk.AccAddressFromBech32(address)
 	if err != nil {
 		return nil, err
@@ -86,7 +86,7 @@ func QueryAccountInfo(ctx *MyContext, address string) (*module.AccountInfo, erro
 	return acc, nil
 }
 
-func QueryBalanceInfo(ctx *MyContext, address string) (*module.Balances, error) {
+func QueryOsmoBalanceInfo(ctx *MyContext, address string) (*module.Balances, error) {
 	myAddress, err := sdk.AccAddressFromBech32(address)
 	if err != nil {
 		return nil, err
@@ -125,7 +125,7 @@ func QueryBalanceInfo(ctx *MyContext, address string) (*module.Balances, error) 
 	return bal, nil
 }
 
-func QueryPoolInfo(ctx *MyContext) (*module.Pools, error) {
+func QueryOsmoPoolInfo(ctx *MyContext) (*module.Pools, error) {
 	// Create a connection to the gRPC server.
 	grpcConn, _ := grpc.Dial(
 		GRPC_SERVER_ADDRESS, // your gRPC server address.
@@ -165,7 +165,7 @@ func QueryPoolInfo(ctx *MyContext) (*module.Pools, error) {
 }
 
 // NewBuildSwapExactAmountInMsg tokenInStr Expected format: "{amount}{denomination}"
-func NewBuildSwapExactAmountInMsg(addr string, tokenIn sdk.Coin, tokenOutMinAmtStr string, routerids, routerdenoms []string) (sdk.Msg, error) {
+func NewOsmoBuildSwapExactAmountInMsg(addr string, tokenIn sdk.Coin, tokenOutMinAmtStr string, routerids, routerdenoms []string) (sdk.Msg, error) {
 	routes, err := swapAmountInRoutes(routerids, routerdenoms)
 	if err != nil {
 		return nil, err
@@ -244,7 +244,7 @@ func SendOsmoTx(ctx *MyContext, mnemonic, tokenInDemon, tokenOutMinAmtStr string
 		return nil, err
 	}
 	tokenInStr := sdk.NewInt64Coin(tokenInDemon, tokenInAmount)
-	msg, err := NewBuildSwapExactAmountInMsg(ACCOUNT_ADDR, tokenInStr, tokenOutMinAmtStr, routerids, routerdenoms)
+	msg, err := NewOsmoBuildSwapExactAmountInMsg(ACCOUNT_ADDR, tokenInStr, tokenOutMinAmtStr, routerids, routerdenoms)
 	if err != nil {
 		return nil, err
 	}

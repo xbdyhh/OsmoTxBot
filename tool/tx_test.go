@@ -8,7 +8,7 @@ import (
 func TestQuery(t *testing.T) {
 	InitCcontext()
 	ctx := InitMyContext()
-	acc, err := QueryAccountInfo(ctx, "osmo1w3t6kvkvhudyrcvveu9yzyh3sv7ykpst24rc4p")
+	acc, err := QueryOsmoAccountInfo(ctx, "osmo1w3t6kvkvhudyrcvveu9yzyh3sv7ykpst24rc4p")
 	if err != nil {
 		t.Errorf("an err happend%v", err)
 	}
@@ -18,7 +18,7 @@ func TestQuery(t *testing.T) {
 func TestQueryBalanceInfo(t *testing.T) {
 	InitCcontext()
 	ctx := InitMyContext()
-	bal, err := QueryBalanceInfo(ctx, "osmo1w3t6kvkvhudyrcvveu9yzyh3sv7ykpst24rc4p")
+	bal, err := QueryOsmoBalanceInfo(ctx, "osmo1w3t6kvkvhudyrcvveu9yzyh3sv7ykpst24rc4p")
 	if err != nil {
 		t.Errorf("an err happend%v", err)
 	}
@@ -29,7 +29,7 @@ func TestQueryBalanceInfo(t *testing.T) {
 func TestQueryPoolInfo(t *testing.T) {
 	InitCcontext()
 	ctx := InitMyContext()
-	pool, err := QueryPoolInfo(ctx)
+	pool, err := QueryOsmoPoolInfo(ctx)
 	if err != nil {
 		t.Errorf("%v", err)
 	}
