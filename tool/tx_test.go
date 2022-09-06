@@ -40,6 +40,6 @@ func TestSendTx(t *testing.T) {
 	InitContext()
 	ctx := context.Background()
 	SendOsmoTx(ctx, "",
-		"uosmo", "1000", 10000, 19, 656400, []string{"1"},
+		"uosmo", "1000", 10000, 2, 656400, []string{"1"},
 		[]string{"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2"})
 }

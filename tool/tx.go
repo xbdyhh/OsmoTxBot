@@ -33,6 +33,7 @@ const (
 	GRPC_SERVER_ADDRESS = "grpc.osmosis.zone:9090"
 	CHAIN_ID            = "osmosis-1"
 	ACCOUNT_ADDR        = "osmo16kydz6vznpgtpgws733panrs6atdsefcfxa97j"
+	GAS_FEE             = 1000
 )
 
 var Ccontext = client.Context{}.WithChainID(CHAIN_ID)
@@ -46,7 +47,8 @@ func InitContext() {
 		WithInput(os.Stdin).
 		WithAccountRetriever(atypes.AccountRetriever{}).
 		WithBroadcastMode(flags.BroadcastSync).
-		WithViper("OSMOSIS")
+		WithViper("OSMOSIS").
+		WithSignModeStr(flags.SignModeDirect)
 	conf := sdk.GetConfig()
 	conf.SetBech32PrefixForAccount("osmo", "osmopub")
 }
@@ -203,6 +205,10 @@ func swapAmountInRoutes(ids, denoms []string) ([]types.SwapAmountInRoute, error)
 }
 
 func SignTx(txBuilder client.TxBuilder, priv ctypes.PrivKey, sequence uint64, accountNum uint64, msg sdk.Msg) error {
+	var err error
+	if err = txBuilder.SetMsgs(msg); err != nil {
+		return err
+	}
 	sigV2 := signing.SignatureV2{
 		PubKey: priv.PubKey(),
 		Data: &signing.SingleSignatureData{
@@ -211,7 +217,7 @@ func SignTx(txBuilder client.TxBuilder, priv ctypes.PrivKey, sequence uint64, ac
 		},
 		Sequence: sequence,
 	}
-	err := txBuilder.SetSignatures(sigV2)
+	err = txBuilder.SetSignatures(sigV2)
 	if err != nil {
 		return err
 	}
@@ -227,9 +233,6 @@ func SignTx(txBuilder client.TxBuilder, priv ctypes.PrivKey, sequence uint64, ac
 	if err = txBuilder.SetSignatures(sigV2); err != nil {
 		return err
 	}
-	if err = txBuilder.SetMsgs(msg); err != nil {
-		return err
-	}
 	return nil
 }
 
@@ -237,7 +240,7 @@ func SendOsmoTx(ctx context.Context, mnemonic, tokenInDemon, tokenOutMinAmtStr s
 	routerids, routerdenoms []string) error {
 	txBuilder := Ccontext.TxConfig.NewTxBuilder()
 	txBuilder.SetGasLimit(GAS_LIMIT)
-	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewInt64Coin("uosmo", 2000)))
+	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewInt64Coin("uosmo", GAS_FEE)))
 	priv, err := NewPrivateKeyByMnemonic(mnemonic)
 	if err != nil {
 		return err
