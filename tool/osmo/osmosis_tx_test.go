@@ -1,13 +1,14 @@
-package tool
+package osmo
 
 import (
 	"fmt"
+	"github.com/xbdyhh/OsmoTxBot/tool"
 	"testing"
 )
 
-func TestQuery(t *testing.T) {
+func TestQueryOsmoAccountInfo(t *testing.T) {
 	InitCcontext()
-	ctx := InitMyContext()
+	ctx := tool.InitMyContext()
 	acc, err := QueryOsmoAccountInfo(ctx, "osmo1w3t6kvkvhudyrcvveu9yzyh3sv7ykpst24rc4p")
 	if err != nil {
 		t.Errorf("an err happend%v", err)
@@ -15,9 +16,9 @@ func TestQuery(t *testing.T) {
 	fmt.Println(acc.Account.Sequence)
 }
 
-func TestQueryBalanceInfo(t *testing.T) {
+func TestQueryOsmoBalanceInfo(t *testing.T) {
 	InitCcontext()
-	ctx := InitMyContext()
+	ctx := tool.InitMyContext()
 	bal, err := QueryOsmoBalanceInfo(ctx, "osmo1w3t6kvkvhudyrcvveu9yzyh3sv7ykpst24rc4p")
 	if err != nil {
 		t.Errorf("an err happend%v", err)
@@ -26,9 +27,9 @@ func TestQueryBalanceInfo(t *testing.T) {
 	fmt.Println(amount)
 }
 
-func TestQueryPoolInfo(t *testing.T) {
+func TestQueryOSMOPoolInfo(t *testing.T) {
 	InitCcontext()
-	ctx := InitMyContext()
+	ctx := tool.InitMyContext()
 	pool, err := QueryOsmoPoolInfo(ctx)
 	if err != nil {
 		t.Errorf("%v", err)
@@ -38,8 +39,15 @@ func TestQueryPoolInfo(t *testing.T) {
 
 func TestSendTx(t *testing.T) {
 	InitCcontext()
-	ctx := InitMyContext()
+	ctx := tool.InitMyContext()
 	SendOsmoTx(ctx, "",
 		"uosmo", "1000", 10000, 2, 656400, []string{"1"},
+		[]string{"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2"})
+}
+
+func TestSendTx2(t *testing.T) {
+	InitCcontext()
+	ctx := tool.InitMyContext()
+	SendOsmoTx2(ctx, &Ccontext, "", "osmo1cakje0c0wq3lc98em9yxunefkdpy6akz778cwj", 1, 656574, "uosmo", "100", 1000, []string{"1"},
 		[]string{"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2"})
 }
