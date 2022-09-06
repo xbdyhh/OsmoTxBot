@@ -1,7 +1,6 @@
 package tool
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -38,7 +37,7 @@ const (
 
 var Ccontext = client.Context{}.WithChainID(CHAIN_ID)
 
-func InitContext() {
+func InitCcontext() {
 	encodingConfig := app.MakeEncodingConfig()
 	Ccontext = Ccontext.WithCodec(encodingConfig.Marshaler).
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
@@ -52,12 +51,11 @@ func InitContext() {
 	conf := sdk.GetConfig()
 	conf.SetBech32PrefixForAccount("osmo", "osmopub")
 }
-func QueryAccountInfo(ctx context.Context, address string) (*module.AccountInfo, error) {
+func QueryAccountInfo(ctx *MyContext, address string) (*module.AccountInfo, error) {
 	myAddress, err := sdk.AccAddressFromBech32(address)
 	if err != nil {
 		return nil, err
 	}
-
 	// Create a connection to the gRPC server.
 	grpcConn, _ := grpc.Dial(
 		GRPC_SERVER_ADDRESS, // your gRPC server address.
@@ -88,7 +86,7 @@ func QueryAccountInfo(ctx context.Context, address string) (*module.AccountInfo,
 	return acc, nil
 }
 
-func QueryBalanceInfo(ctx context.Context, address string) (*module.Balances, error) {
+func QueryBalanceInfo(ctx *MyContext, address string) (*module.Balances, error) {
 	myAddress, err := sdk.AccAddressFromBech32(address)
 	if err != nil {
 		return nil, err
@@ -127,7 +125,7 @@ func QueryBalanceInfo(ctx context.Context, address string) (*module.Balances, er
 	return bal, nil
 }
 
-func QueryPoolInfo(ctx context.Context) (*module.Pools, error) {
+func QueryPoolInfo(ctx *MyContext) (*module.Pools, error) {
 	// Create a connection to the gRPC server.
 	grpcConn, _ := grpc.Dial(
 		GRPC_SERVER_ADDRESS, // your gRPC server address.
@@ -236,38 +234,43 @@ func SignTx(txBuilder client.TxBuilder, priv ctypes.PrivKey, sequence uint64, ac
 	return nil
 }
 
-func SendOsmoTx(ctx context.Context, mnemonic, tokenInDemon, tokenOutMinAmtStr string, tokenInAmount int64, sequence, accnum uint64,
-	routerids, routerdenoms []string) error {
+func SendOsmoTx(ctx *MyContext, mnemonic, tokenInDemon, tokenOutMinAmtStr string, tokenInAmount int64, sequence, accnum uint64,
+	routerids, routerdenoms []string) (*sdk.TxResponse, error) {
 	txBuilder := Ccontext.TxConfig.NewTxBuilder()
 	txBuilder.SetGasLimit(GAS_LIMIT)
 	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewInt64Coin("uosmo", GAS_FEE)))
 	priv, err := NewPrivateKeyByMnemonic(mnemonic)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	tokenInStr := sdk.NewInt64Coin(tokenInDemon, tokenInAmount)
 	msg, err := NewBuildSwapExactAmountInMsg(ACCOUNT_ADDR, tokenInStr, tokenOutMinAmtStr, routerids, routerdenoms)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if err = SignTx(txBuilder, priv, sequence, accnum, msg); err != nil {
-		return err
+		return nil, err
 	}
 	txBytes, err := Ccontext.TxConfig.TxEncoder()(txBuilder.GetTx())
 	if err != nil {
-		return err
+		return nil, err
 	}
 	txJSONBytes, err := Ccontext.TxConfig.TxJSONEncoder()(txBuilder.GetTx())
 	if err != nil {
-		return err
+		return nil, err
 	}
 	fmt.Println(string(txJSONBytes))
+	res, err := BrocastTransaction(ctx, txBytes)
+	return res, nil
+}
+
+func BrocastTransaction(ctx *MyContext, txBytes []byte) (*sdk.TxResponse, error) {
 	grpcConn, err := grpc.Dial(
 		GRPC_SERVER_ADDRESS, // Or your gRPC server address.
 		grpc.WithInsecure(), // The SDK doesn't support any transport security mechanism.
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	txClient := tx.NewServiceClient(grpcConn)
 	grpcRes, err := txClient.BroadcastTx(
@@ -278,12 +281,12 @@ func SendOsmoTx(ctx context.Context, mnemonic, tokenInDemon, tokenOutMinAmtStr s
 		},
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	fmt.Println(grpcRes.TxResponse)
 	defer grpcConn.Close()
-	return nil
+	return grpcRes.TxResponse, nil
 }
 
 func NewPrivateKeyByMnemonic(mnemonic string) (ctypes.PrivKey, error) {
