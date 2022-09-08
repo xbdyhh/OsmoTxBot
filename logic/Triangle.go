@@ -231,7 +231,7 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 		for i, v := range TransactionRouters {
 			amountin := uint64(float64(Min(v.Depth, balAmount)) * 0.3)
 			tokenMinOUt := strconv.FormatUint(amountin, 10)
-			if float64(amountin)*(v.Ratio-1) > float64(osmo.GAS_FEE*5) {
+			if float64(amountin)*(v.Ratio-1) > float64(osmo.GAS_FEE*20) {
 				fmt.Printf("hope profit is: %v:amount is %d:ratio is %v:bal is %v:depth is %v \n",
 					float64(amountin)*(v.Ratio-1), amountin, v.Ratio, balAmount, v.Depth)
 				ctx.Logger.Infof("hope profit is: %v:amount is %d:ratio is %v\n", float64(amountin)*(v.Ratio-1), amountin-osmo.GAS_FEE*2, v.Ratio)
@@ -261,6 +261,7 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 		}
 		TransactionRouters = TransactionRouters[:0]
 		RoterLock.Unlock()
+		fmt.Println("sleep 40s")
 		time.Sleep(40 * time.Second)
 	}
 	ctx.Wg.Done()
