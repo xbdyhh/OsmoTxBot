@@ -232,7 +232,8 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 			amountin := Min(v.Depth, balAmount-osmo.GAS_FEE)
 			tokenMinOUt := strconv.FormatUint(amountin, 10)
 			fmt.Println("send msg")
-			fmt.Println("hope profit is: %v", float64(amountin)*v.Ratio)
+			fmt.Println("hope profit is: %v:ratio is %v", float64(amountin)*v.Ratio, v.Ratio)
+			ctx.Logger.Infof("hope profit is: %v", float64(amountin)*v.Ratio)
 			resp, err := osmo.SendOsmoTx(ctx, MNEMONIC, OSMO_DENOM, tokenMinOUt, amountin, seq, accnum, v.PoolIds, v.TokenOutDenom)
 			if err != nil {
 				ctx.Logger.Errorf("%d tx err:%v", i, err)
