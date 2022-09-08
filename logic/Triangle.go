@@ -197,14 +197,17 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 	fmt.Println("address is:" + address)
 	time.Sleep(3 * time.Second)
 	fmt.Println("sleeping end!")
+	acc, err := osmo.QueryOsmoAccountInfo(ctx, address)
+	if err != nil {
+		ctx.Logger.Errorf("%v", err)
+		panic(err)
+	}
+	seq, err := strconv.ParseUint(acc.Account.Sequence, 10, 64)
+	if err != nil {
+		ctx.Logger.Errorf("%v", err)
+	}
 	for {
 		balance, err := osmo.QueryOsmoBalanceInfo(ctx, address)
-		if err != nil {
-			ctx.Logger.Errorf("%v", err)
-			continue
-		}
-
-		acc, err := osmo.QueryOsmoAccountInfo(ctx, address)
 		if err != nil {
 			ctx.Logger.Errorf("%v", err)
 			continue
@@ -218,11 +221,6 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 				}
 				break
 			}
-		}
-		seq, err := strconv.ParseUint(acc.Account.Sequence, 10, 64)
-		if err != nil {
-			ctx.Logger.Errorf("%v", err)
-			continue
 		}
 		accnum, err := strconv.ParseUint(acc.Account.AccountNumber, 10, 64)
 		if err != nil {
