@@ -29,7 +29,7 @@ const (
 	GRPC_SERVER_ADDRESS = "65.108.141.109:9090"
 	CHAIN_ID            = "osmosis-1"
 	ACCOUNT_ADDR        = "osmo16kydz6vznpgtpgws733panrs6atdsefcfxa97j"
-	GAS_FEE             = 2500
+	GAS_FEE             = 5000
 )
 
 var Ccontext = client.Context{}.WithChainID(CHAIN_ID)
