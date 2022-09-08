@@ -1,30 +1,33 @@
 package module
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
-
 type Path struct {
-	ID         int64
+	ID         uint64
 	Ratio      float64
 	WeightFrom uint64
 	WeightTo   uint64
-	AmountFrom uint64
-	AmountTo   uint64
-	fees       float64
+	AmountFrom float64
+	AmountTo   float64
+	Fees       float64
 }
 
 type Pool struct {
-	ID         int64
+	ID         uint64
 	PoolAssets PoolAssets
 	SwapFees   float64
 }
 type PoolAssets []PoolAsset
 type PoolAsset struct {
-	Token  sdk.Coin
-	Weight uint64
+	TokenDenom string
+	Amount     float64
+	Weight     uint64
 }
 
 func (p *Path) GetRatio() {
-	p.Ratio = float64(p.WeightFrom) / float64(p.WeightTo) * float64(p.AmountTo) / float64(p.AmountFrom) * (1 - p.fees)
+	p.Ratio = (float64(p.WeightFrom) / float64(p.WeightTo)) *
+		(p.AmountTo / p.AmountFrom) * (1 - p.Fees)
+}
+func (p Path) GetDepth(r float64) uint64 {
+	return uint64((r - 1) * float64(p.AmountFrom))
 }
 
 type Router struct {
