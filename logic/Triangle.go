@@ -212,7 +212,6 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 			ctx.Logger.Errorf("%v", err)
 			continue
 		}
-		fmt.Println(balance)
 		var balAmount uint64
 		for _, v := range balance.Balances {
 			if v.Denom == OSMO_DENOM {
@@ -232,11 +231,10 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 		for i, v := range TransactionRouters {
 			amountin := Min(v.Depth, balAmount)
 			tokenMinOUt := strconv.FormatUint(amountin, 10)
-			fmt.Println("send msg")
-			fmt.Printf("hope profit is: %v:amount is %d:ratio is %v:bal is %v:depth is %v \n",
-				float64(amountin)*(v.Ratio-1), amountin, v.Ratio, balAmount, v.Depth)
-			ctx.Logger.Infof("hope profit is: %v:amount is %d:ratio is %v\n", float64(amountin)*(v.Ratio-1), amountin, v.Ratio)
-			if float64(amountin)*(v.Ratio-1) > float64(osmo.GAS_FEE*10) {
+			if float64(amountin)*(v.Ratio-1) > float64(osmo.GAS_FEE*5) {
+				fmt.Printf("hope profit is: %v:amount is %d:ratio is %v:bal is %v:depth is %v \n",
+					float64(amountin)*(v.Ratio-1), amountin, v.Ratio, balAmount, v.Depth)
+				ctx.Logger.Infof("hope profit is: %v:amount is %d:ratio is %v\n", float64(amountin)*(v.Ratio-1), amountin-osmo.GAS_FEE*2, v.Ratio)
 				resp, err := osmo.SendOsmoTx(ctx, MNEMONIC, OSMO_DENOM, tokenMinOUt, amountin, seq, accnum, v.PoolIds, v.TokenOutDenom)
 				if err != nil {
 					ctx.Logger.Errorf("%d tx err:%v", i, err)
@@ -246,6 +244,7 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 					continue
 				} else if resp.Code == 0 {
 					seq++
+					balAmount -= amountin + osmo.GAS_FEE
 				} else if resp.Code == 32 {
 					acc, err := osmo.QueryOsmoAccountInfo(ctx, address)
 					if err != nil {
@@ -256,7 +255,6 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 				}
 
 			}
-			balAmount -= (amountin + osmo.GAS_FEE)
 			if balAmount <= osmo.GAS_FEE*3 {
 				break
 			}
