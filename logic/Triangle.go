@@ -170,7 +170,7 @@ func DeleteLittlePools(ctx *tool.MyContext, pools *tm.Pools) ([]module.Pool, err
 func MinDepth(uis ...uint64) uint64 {
 	var ans uint64 = 0
 	for i, v := range uis {
-		if v < ans || i == 1 {
+		if v < ans || i == 0 {
 			ans = v
 		}
 	}
