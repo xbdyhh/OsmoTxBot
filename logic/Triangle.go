@@ -232,7 +232,7 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 			amountin := Min(v.Depth, balAmount-osmo.GAS_FEE)
 			tokenMinOUt := strconv.FormatUint(amountin, 10)
 			fmt.Println("send msg")
-			fmt.Printf("hope profit is: %v:amount is %d:ratio is %v\n", float64(amountin)*v.Ratio, amountin, v.Ratio)
+			fmt.Printf("hope profit is: %v:amount is %d:ratio is %v\n", float64(amountin)*(v.Ratio-1), amountin, v.Ratio)
 			ctx.Logger.Infof("hope profit is: %v:amount is %d:ratio is %v\n", float64(amountin)*(v.Ratio-1), amountin, v.Ratio)
 			if float64(amountin)*(v.Ratio-1) > float64(osmo.GAS_FEE*3) {
 				resp, err := osmo.SendOsmoTx(ctx, MNEMONIC, OSMO_DENOM, tokenMinOUt, amountin, seq, accnum, v.PoolIds, v.TokenOutDenom)
