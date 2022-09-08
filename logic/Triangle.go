@@ -212,6 +212,7 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 			ctx.Logger.Errorf("%v", err)
 			continue
 		}
+		fmt.Println(balance)
 		var balAmount uint64
 		for _, v := range balance.Balances {
 			if v.Denom == OSMO_DENOM {
