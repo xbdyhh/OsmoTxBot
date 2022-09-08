@@ -229,7 +229,7 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 		}
 		RoterLock.Lock()
 		for i, v := range TransactionRouters {
-			amountin := Min(v.Depth, balAmount-3*osmo.GAS_FEE)
+			amountin := Min(v.Depth, balAmount)
 			tokenMinOUt := strconv.FormatUint(amountin, 10)
 			fmt.Println("send msg")
 			fmt.Printf("hope profit is: %v:amount is %d:ratio is %v:bal is %v:depth is %v \n",
@@ -256,7 +256,7 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 
 			}
 			balAmount -= (amountin + osmo.GAS_FEE)
-			if balAmount <= 0 {
+			if balAmount <= osmo.GAS_FEE*3 {
 				break
 			}
 		}
