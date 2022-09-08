@@ -128,7 +128,7 @@ func FreshPoolMap(ctx *tool.MyContext) {
 func SortRouters(ctx *tool.MyContext, routers []module.Router) []module.Router {
 	newRouters := make([]module.Router, 0, 0)
 	for _, v := range routers {
-		if float64(v.Depth)*(v.Ratio-1) > osmo.GAS_FEE*20 {
+		if float64(v.Depth)*(v.Ratio-1) > osmo.GAS_FEE {
 			newRouters = append(newRouters, v)
 		}
 	}
@@ -232,8 +232,8 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 			amountin := Min(v.Depth, balAmount-osmo.GAS_FEE)
 			tokenMinOUt := strconv.FormatUint(amountin, 10)
 			fmt.Println("send msg")
+			fmt.Println("hope profit is: %v", float64(amountin)*v.Ratio)
 			resp, err := osmo.SendOsmoTx(ctx, MNEMONIC, OSMO_DENOM, tokenMinOUt, amountin, seq, accnum, v.PoolIds, v.TokenOutDenom)
-			fmt.Println("finish at ")
 			if err != nil {
 				ctx.Logger.Errorf("%d tx err:%v", i, err)
 				continue
