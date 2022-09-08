@@ -234,7 +234,7 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 			fmt.Println("send msg")
 			fmt.Printf("hope profit is: %v:amount is %d:ratio is %v\n", float64(amountin)*(v.Ratio-1), amountin, v.Ratio)
 			ctx.Logger.Infof("hope profit is: %v:amount is %d:ratio is %v\n", float64(amountin)*(v.Ratio-1), amountin, v.Ratio)
-			if float64(amountin)*(v.Ratio-1) > float64(osmo.GAS_FEE*3) {
+			if float64(amountin)*(v.Ratio-1) > float64(osmo.GAS_FEE*10) {
 				resp, err := osmo.SendOsmoTx(ctx, MNEMONIC, OSMO_DENOM, tokenMinOUt, amountin, seq, accnum, v.PoolIds, v.TokenOutDenom)
 				if err != nil {
 					ctx.Logger.Errorf("%d tx err:%v", i, err)
@@ -261,7 +261,7 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 		}
 		TransactionRouters = TransactionRouters[:0]
 		RoterLock.Unlock()
-		time.Sleep(2 * time.Second)
+		time.Sleep(15 * time.Second)
 	}
 	ctx.Wg.Done()
 }
