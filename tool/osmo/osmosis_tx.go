@@ -22,15 +22,14 @@ import (
 	"github.com/xbdyhh/OsmoTxBot/tool/module"
 	"google.golang.org/grpc"
 	"os"
-	"strconv"
 )
 
 const (
-	GAS_LIMIT           = 100000
-	GRPC_SERVER_ADDRESS = "grpc.osmosis.zone:9090"
+	GAS_LIMIT           = 1000000
+	GRPC_SERVER_ADDRESS = "65.108.141.109:9090"
 	CHAIN_ID            = "osmosis-1"
 	ACCOUNT_ADDR        = "osmo16kydz6vznpgtpgws733panrs6atdsefcfxa97j"
-	GAS_FEE             = 1000
+	GAS_FEE             = 2500
 )
 
 var Ccontext = client.Context{}.WithChainID(CHAIN_ID)
@@ -163,7 +162,7 @@ func QueryOsmoPoolInfo(ctx *tool.MyContext) (*module.Pools, error) {
 }
 
 // NewBuildSwapExactAmountInMsg tokenInStr Expected format: "{amount}{denomination}"
-func NewOsmoBuildSwapExactAmountInMsg(addr string, tokenIn sdk.Coin, tokenOutMinAmtStr string, routerids, routerdenoms []string) (sdk.Msg, error) {
+func NewOsmoBuildSwapExactAmountInMsg(addr string, tokenIn sdk.Coin, tokenOutMinAmtStr string, routerids []uint64, routerdenoms []string) (sdk.Msg, error) {
 	routes, err := swapAmountInRoutes(routerids, routerdenoms)
 	if err != nil {
 		return nil, err
@@ -181,19 +180,15 @@ func NewOsmoBuildSwapExactAmountInMsg(addr string, tokenIn sdk.Coin, tokenOutMin
 
 	return msg, nil
 }
-func swapAmountInRoutes(ids, denoms []string) ([]types.SwapAmountInRoute, error) {
+func swapAmountInRoutes(ids []uint64, denoms []string) ([]types.SwapAmountInRoute, error) {
 	if len(ids) != len(denoms) {
 		return nil, errors.New("swap route pool ids and denoms mismatch")
 	}
 
 	routes := []types.SwapAmountInRoute{}
 	for index, poolIDStr := range ids {
-		pID, err := strconv.Atoi(poolIDStr)
-		if err != nil {
-			return nil, err
-		}
 		routes = append(routes, types.SwapAmountInRoute{
-			PoolId:        uint64(pID),
+			PoolId:        poolIDStr,
 			TokenOutDenom: denoms[index],
 		})
 	}
@@ -232,8 +227,8 @@ func SignTx(txBuilder client.TxBuilder, priv ctypes.PrivKey, sequence uint64, ac
 	return nil
 }
 
-func SendOsmoTx(ctx *tool.MyContext, mnemonic, tokenInDemon, tokenOutMinAmtStr string, tokenInAmount int64, sequence, accnum uint64,
-	routerids, routerdenoms []string) (*sdk.TxResponse, error) {
+func SendOsmoTx(ctx *tool.MyContext, mnemonic, tokenInDemon, tokenOutMinAmtStr string, tokenInAmount uint64, sequence, accnum uint64,
+	routerids []uint64, routerdenoms []string) (*sdk.TxResponse, error) {
 	txBuilder := Ccontext.TxConfig.NewTxBuilder()
 	txBuilder.SetGasLimit(GAS_LIMIT)
 	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewInt64Coin("uosmo", GAS_FEE)))
@@ -241,7 +236,7 @@ func SendOsmoTx(ctx *tool.MyContext, mnemonic, tokenInDemon, tokenOutMinAmtStr s
 	if err != nil {
 		return nil, err
 	}
-	tokenInStr := sdk.NewInt64Coin(tokenInDemon, tokenInAmount)
+	tokenInStr := sdk.NewCoin(tokenInDemon, sdk.NewIntFromUint64(tokenInAmount))
 	msg, err := NewOsmoBuildSwapExactAmountInMsg(ACCOUNT_ADDR, tokenInStr, tokenOutMinAmtStr, routerids, routerdenoms)
 	if err != nil {
 		return nil, err
@@ -258,12 +253,13 @@ func SendOsmoTx(ctx *tool.MyContext, mnemonic, tokenInDemon, tokenOutMinAmtStr s
 		return nil, err
 	}
 	fmt.Println(string(txJSONBytes))
+	ctx.Logger.Infof("Signed tx is:%v", string(txJSONBytes))
 	res, err := tool.BrocastTransaction(ctx, GRPC_SERVER_ADDRESS, txBytes)
 	return res, nil
 }
 
 func SendOsmoTx2(ctx *tool.MyContext, Ccontext *client.Context, mnemonic string, accAddr string, sequence uint64, accnum uint64,
-	tokenInDemon, tokenOutMinAmtStr string, tokenInAmount int64, routerids, routerdenoms []string) (*sdk.TxResponse, error) {
+	tokenInDemon, tokenOutMinAmtStr string, tokenInAmount int64, routerids []uint64, routerdenoms []string) (*sdk.TxResponse, error) {
 	priv, err := tool.NewPrivateKeyByMnemonic(mnemonic)
 	if err != nil {
 		return nil, err
