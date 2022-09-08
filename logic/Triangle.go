@@ -240,9 +240,19 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 					ctx.Logger.Errorf("%d tx err:%v", i, err)
 					continue
 				}
-				if resp != nil && resp.Code == 0 {
+				if resp == nil {
+					continue
+				} else if resp.Code == 0 {
 					seq++
+				} else if resp.Code == 32 {
+					acc, err := osmo.QueryOsmoAccountInfo(ctx, address)
+					if err != nil {
+						ctx.Logger.Errorf("%v", err)
+						panic(err)
+					}
+					seq, err = strconv.ParseUint(acc.Account.Sequence, 10, 64)
 				}
+
 			}
 			balAmount -= (amountin + osmo.GAS_FEE)
 			if balAmount <= 0 {
