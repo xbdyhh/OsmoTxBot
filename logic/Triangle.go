@@ -207,6 +207,7 @@ func MinDepth(uis ...uint64) uint64 {
 func SendOsmoTriTx(ctx *tool.MyContext) {
 	priv, err := tool.NewPrivateKeyByMnemonic(MNEMONIC)
 	if err != nil {
+
 		panic(err)
 	}
 	address, err := osmo.PrivateToOsmoAddress(priv)
