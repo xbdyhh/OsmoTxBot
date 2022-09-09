@@ -4,7 +4,6 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	lj "gopkg.in/natefinch/lumberjack.v2"
-	"time"
 )
 
 const LogName = "./Log/test.log"
@@ -27,7 +26,7 @@ func getEncoder() zapcore.Encoder {
 }
 
 func getLogWriter() zapcore.WriteSyncer {
-	logname := LogName + time.Now().String()
+	logname := LogName
 	lumberJackLogger := &lj.Logger{
 		Filename:   logname,
 		MaxSize:    1,
