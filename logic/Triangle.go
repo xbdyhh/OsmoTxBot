@@ -26,6 +26,7 @@ func NewPoolMap(ctx *tool.MyContext) PoolMap {
 	return make(map[string]map[string]module.Path)
 }
 func (p PoolMap) FreshMap(ctx *tool.MyContext, pools []module.Pool) []module.Pool {
+	TransactionRouters = TransactionRouters[:0]
 	newPools := make([]module.Pool, 0, 0)
 here:
 	for _, v := range pools {
@@ -291,7 +292,6 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 				break
 			}
 		}
-		TransactionRouters = TransactionRouters[:0]
 		RoterLock.Unlock()
 		for {
 			ok, err := osmo.IsOsmoSuccess(ctx, txs...)
