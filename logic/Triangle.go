@@ -297,7 +297,7 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 			if ok {
 				break
 			}
-			time.Sleep(10 * time.Second)
+			time.Sleep(5 * time.Second)
 		}
 
 	}
