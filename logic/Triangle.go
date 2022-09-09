@@ -25,12 +25,18 @@ type PoolMap map[string]map[string]module.Path
 func NewPoolMap(ctx *tool.MyContext) PoolMap {
 	return make(map[string]map[string]module.Path)
 }
-func (p PoolMap) FreshMap(ctx *tool.MyContext, pools []module.Pool) {
+func (p PoolMap) FreshMap(ctx *tool.MyContext, pools []module.Pool) []module.Pool {
+	newPools := make([]module.Pool, 0, 0)
+here:
 	for _, v := range pools {
 		for _, from := range v.PoolAssets {
 			for _, to := range v.PoolAssets {
 				if from.TokenDenom == to.TokenDenom {
 					continue
+				}
+				if from.TokenDenom != OSMO_DENOM && to.TokenDenom != OSMO_DENOM {
+					newPools = append(newPools, v)
+					continue here
 				}
 				if _, ok := p[from.TokenDenom]; !ok {
 					p[from.TokenDenom] = make(map[string]module.Path)
@@ -47,17 +53,15 @@ func (p PoolMap) FreshMap(ctx *tool.MyContext, pools []module.Pool) {
 				path.GetRatio()
 				oldpath, ok := p[from.TokenDenom][to.TokenDenom]
 				if !ok {
+					p[from.TokenDenom][to.TokenDenom] = path
+				} else {
 					if to.TokenDenom == OSMO_DENOM && to.Amount < 10000000 {
 						continue
 					}
 					if from.TokenDenom == OSMO_DENOM && from.Amount < 10000000 {
 						continue
 					}
-
-					p[from.TokenDenom][to.TokenDenom] = path
-				} else {
-					if oldpath.Ratio < path.Ratio &&
-						float64(path.GetDepth(1.01))/p[OSMO_DENOM][from.TokenDenom].Ratio > 1000000 {
+					if oldpath.Ratio < path.Ratio {
 						p[from.TokenDenom][to.TokenDenom] = path
 					}
 				}
@@ -66,32 +70,50 @@ func (p PoolMap) FreshMap(ctx *tool.MyContext, pools []module.Pool) {
 	}
 	ctx.Logger.Info("fresh pools map done.")
 	time.Sleep(3 * time.Second)
+	return newPools
 }
 
-func (p PoolMap) FindProfitMargins(ctx *tool.MyContext) ([]module.Router, error) {
+func (p PoolMap) FindProfitMargins(ctx *tool.MyContext, pools []module.Pool) ([]module.Router, error) {
 	routers := make([]module.Router, 0, 0)
-	for from, frommap := range p {
-		for to, v := range frommap {
-			if from == OSMO_DENOM || to == OSMO_DENOM {
-				continue
-			}
-			ratio := v.Ratio * p[OSMO_DENOM][from].Ratio * p[to][OSMO_DENOM].Ratio
-			if ratio > 1 {
-				ids := []uint64{p[OSMO_DENOM][from].ID, p[from][to].ID, p[to][OSMO_DENOM].ID}
-				tokenOutDenoms := []string{from, to, OSMO_DENOM}
-				depthFrom := p[OSMO_DENOM][from].GetDepth(ratio)
-				depth := uint64(float64(v.GetDepth(ratio)) / p[OSMO_DENOM][from].Ratio)
-				depthTo := uint64(float64(p[to][OSMO_DENOM].GetDepth(ratio)) / p[OSMO_DENOM][from].Ratio / p[from][to].Ratio)
-				router := module.Router{
-					PoolIds:       ids,
-					TokenOutDenom: tokenOutDenoms,
-					Depth:         MinDepth(depthFrom, depth, depthTo),
-					Ratio:         ratio,
+	for _, v := range pools {
+	nextpool:
+		for _, from := range v.PoolAssets {
+			for _, to := range v.PoolAssets {
+				if to.TokenDenom == from.TokenDenom {
+					continue
 				}
-				routers = append(routers, router)
+				path := module.Path{
+					ID:         v.ID,
+					Ratio:      0,
+					WeightFrom: from.Weight,
+					WeightTo:   to.Weight,
+					AmountFrom: from.Amount,
+					AmountTo:   to.Amount,
+					Fees:       v.SwapFees,
+				}
+				path.GetRatio()
+				if ratio := path.Ratio * p[OSMO_DENOM][from.TokenDenom].Ratio * p[to.TokenDenom][OSMO_DENOM].Ratio; ratio > 1 {
+					fmt.Println(path.Ratio)
+					fmt.Println(p[OSMO_DENOM][from.TokenDenom].Ratio)
+					fmt.Println(p[to.TokenDenom][OSMO_DENOM].Ratio)
+					fmt.Println(ratio, " ", path.GetDepth())
+					ids := []uint64{p[OSMO_DENOM][from.TokenDenom].ID, path.ID, p[to.TokenDenom][OSMO_DENOM].ID}
+					fmt.Println(ids)
+					fmt.Println()
+					out := []string{from.TokenDenom, to.TokenDenom, OSMO_DENOM}
+					depth1 := p[OSMO_DENOM][from.TokenDenom].GetDepth()
+					depth2 := uint64(float64(path.GetDepth()) / p[OSMO_DENOM][from.TokenDenom].Ratio)
+					depth3 := uint64(float64(p[to.TokenDenom][OSMO_DENOM].GetDepth()) / p[OSMO_DENOM][from.TokenDenom].Ratio / path.Ratio)
+					routers = append(routers, module.Router{
+						PoolIds:       ids,
+						TokenOutDenom: out,
+						Depth:         MinDepth(depth1, depth2, depth3),
+						Ratio:         ratio,
+					})
+					break nextpool
+				}
 			}
 		}
-
 	}
 	return routers, nil
 }
@@ -112,14 +134,14 @@ func FreshPoolMap(ctx *tool.MyContext) {
 		//删除流动性小于1000的pool
 		pools, err := DeleteLittlePools(ctx, res)
 		//生成最低直接路径的pool map
-		pMap.FreshMap(ctx, pools)
+		newpools := pMap.FreshMap(ctx, pools)
 		//遍历map去处与osmo直接相关的pool后，计算三角赔率（x*y*z*0.97*0.98*0.98），将大于1的添加入待执行名单
 		//得到切片1
-		routers, err := pMap.FindProfitMargins(ctx)
+		routers, err := pMap.FindProfitMargins(ctx, newpools)
 		//组合过滤
 		RoterLock.Lock()
 		TransactionRouters = SortRouters(ctx, routers)
-		ctx.Logger.Infof("Finally transaction routers is:%v", routers)
+		ctx.Logger.Infof("Finally transaction routers is:%v\n", routers)
 		RoterLock.Unlock()
 	}
 	ctx.Wg.Done()
@@ -227,14 +249,18 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 			ctx.Logger.Errorf("%v", err)
 			continue
 		}
+		txs := make([]string, 0, 0)
 		RoterLock.Lock()
 		for i, v := range TransactionRouters {
-			amountin := uint64(float64(Min(v.Depth, balAmount)) * 0.3)
+			amountin := Min(v.Depth, balAmount)
+			if amountin == balAmount {
+				amountin -= osmo.GAS_FEE
+			}
 			tokenMinOUt := strconv.FormatUint(amountin, 10)
-			if float64(amountin)*(v.Ratio-1) > float64(osmo.GAS_FEE*20) {
+			if float64(amountin)*(v.Ratio-1) > float64(osmo.GAS_FEE) {
 				fmt.Printf("hope profit is: %v:amount is %d:ratio is %v:bal is %v:depth is %v \n",
 					float64(amountin)*(v.Ratio-1), amountin, v.Ratio, balAmount, v.Depth)
-				ctx.Logger.Infof("hope profit is: %v:amount is %d:ratio is %v\n", float64(amountin)*(v.Ratio-1), amountin-osmo.GAS_FEE*2, v.Ratio)
+				ctx.Logger.Infof("hope profit is: %v:amount is %d:ratio is %v\n", float64(amountin)*(v.Ratio-1), amountin-osmo.GAS_FEE, v.Ratio)
 				resp, err := osmo.SendOsmoTx(ctx, MNEMONIC, OSMO_DENOM, tokenMinOUt, amountin, seq, accnum, v.PoolIds, v.TokenOutDenom)
 				if err != nil {
 					ctx.Logger.Errorf("%d tx err:%v", i, err)
@@ -245,6 +271,7 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 				} else if resp.Code == 0 {
 					seq++
 					balAmount -= amountin + osmo.GAS_FEE
+
 				} else if resp.Code == 32 {
 					acc, err := osmo.QueryOsmoAccountInfo(ctx, address)
 					if err != nil {
@@ -261,8 +288,18 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 		}
 		TransactionRouters = TransactionRouters[:0]
 		RoterLock.Unlock()
-		fmt.Println("sleep 40s")
-		time.Sleep(40 * time.Second)
+		for {
+			ok, err := osmo.IsOsmoSuccess(ctx, txs...)
+			if err != nil {
+				ctx.Logger.Errorf("query tx err happend!:%v\n", err)
+				break
+			}
+			if ok {
+				break
+			}
+			time.Sleep(10 * time.Second)
+		}
+
 	}
 	ctx.Wg.Done()
 }

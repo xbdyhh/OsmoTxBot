@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	asigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	atx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	atypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/osmosis-labs/osmosis/v11/app"
@@ -29,7 +30,7 @@ const (
 	GRPC_SERVER_ADDRESS = "65.108.141.109:9090"
 	CHAIN_ID            = "osmosis-1"
 	ACCOUNT_ADDR        = "osmo16kydz6vznpgtpgws733panrs6atdsefcfxa97j"
-	GAS_FEE             = 5000
+	GAS_FEE             = 0
 )
 
 var Ccontext = client.Context{}.WithChainID(CHAIN_ID)
@@ -47,6 +48,18 @@ func InitCcontext() {
 		WithSignModeStr(flags.SignModeDirect)
 	conf := sdk.GetConfig()
 	conf.SetBech32PrefixForAccount("osmo", "osmopub")
+}
+func IsOsmoSuccess(ctx *tool.MyContext, hashes ...string) (bool, error) {
+	for _, hash := range hashes {
+		res, err := atx.QueryTx(Ccontext, hash)
+		if err != nil {
+			return false, err
+		}
+		if res.Empty() {
+			return false, nil
+		}
+	}
+	return true, nil
 }
 func QueryOsmoAccountInfo(ctx *tool.MyContext, address string) (*module.AccountInfo, error) {
 	myAddress, err := sdk.AccAddressFromBech32(address)
@@ -253,6 +266,7 @@ func SendOsmoTx(ctx *tool.MyContext, mnemonic, tokenInDemon, tokenOutMinAmtStr s
 		return nil, err
 	}
 	fmt.Println(string(txJSONBytes))
+	ctx.Logger.Infof("sended msg is:%v", string(txJSONBytes))
 	ctx.Logger.Infof("Signed tx is:%v", string(txJSONBytes))
 	res, err := tool.BrocastTransaction(ctx, GRPC_SERVER_ADDRESS, txBytes)
 	return res, nil
