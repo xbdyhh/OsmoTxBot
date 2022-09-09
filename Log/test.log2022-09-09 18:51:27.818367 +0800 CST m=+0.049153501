@@ -1,5 +1,0 @@
-2022-09-09T18:51:47.821+0800	ERROR	logic/Triangle.go:130	pull pools err:rpc error: code = Unavailable desc = timed out waiting for server handshake
-2022-09-09T18:52:07.824+0800	ERROR	logic/Triangle.go:130	pull pools err:rpc error: code = Unavailable desc = timed out waiting for server handshake
-2022-09-09T18:52:27.826+0800	ERROR	logic/Triangle.go:130	pull pools err:rpc error: code = Unavailable desc = timed out waiting for server handshake
-2022-09-09T18:52:28.012+0800	ERROR	logic/Triangle.go:233	rpc error: code = Unavailable desc = timed out waiting for server handshake
-2022-09-09T18:52:47.829+0800	ERROR	logic/Triangle.go:130	pull pools err:rpc error: code = Unavailable desc = timed out waiting for server handshake
