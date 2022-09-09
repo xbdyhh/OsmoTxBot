@@ -290,11 +290,11 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 		ok, err := osmo.IsOsmoSuccess(ctx, txs...)
 		if err != nil {
 			ctx.Logger.Errorf("query tx err happend!:%v\n", err)
-			break
 		}
 		if ok {
 			break
 		}
+		fmt.Println("query tx response is:", ok)
 		time.Sleep(7 * time.Second)
 	}
 
