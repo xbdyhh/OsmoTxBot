@@ -10,7 +10,6 @@ import (
 	"regexp"
 	"sort"
 	"strconv"
-	"sync"
 	"time"
 )
 
@@ -121,8 +120,6 @@ func (p PoolMap) FindProfitMargins(ctx *tool.MyContext, pools []module.Pool) ([]
 
 var TransactionRouters []module.Router
 
-var RoterLock sync.Mutex
-
 func FreshPoolMap(ctx *tool.MyContext) {
 	pMap := NewPoolMap(ctx)
 	for {
@@ -140,10 +137,9 @@ func FreshPoolMap(ctx *tool.MyContext) {
 		//得到切片1
 		routers, err := pMap.FindProfitMargins(ctx, newpools)
 		//组合过滤
-		RoterLock.Lock()
 		TransactionRouters = SortRouters(ctx, routers)
-		ctx.Logger.Debug("Finally transaction routers is:%v\n", routers)
-		RoterLock.Unlock()
+		ctx.Logger.Debugf("Finally transaction routers is:%v\n", routers)
+		SendOsmoTriTx(ctx)
 	}
 	ctx.Wg.Done()
 }
@@ -230,83 +226,77 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 	if err != nil {
 		ctx.Logger.Errorf("%v", err)
 	}
-	for {
-		balance, err := osmo.QueryOsmoBalanceInfo(ctx, address)
-		if err != nil {
-			ctx.Logger.Errorf("%v", err)
+
+	balance, err := osmo.QueryOsmoBalanceInfo(ctx, address)
+	if err != nil {
+		ctx.Logger.Errorf("%v", err)
+	}
+	var balAmount uint64
+	for _, v := range balance.Balances {
+		if v.Denom == OSMO_DENOM {
+			balAmount, err = strconv.ParseUint(v.Amount, 10, 64)
+			if err != nil {
+				ctx.Logger.Errorf("%v", err)
+			}
+			break
+		}
+	}
+	accnum, err := strconv.ParseUint(acc.Account.AccountNumber, 10, 64)
+	if err != nil {
+		ctx.Logger.Errorf("%v", err)
+	}
+	txs := make([]string, 0, 0)
+	for i, v := range TransactionRouters {
+		amountin := Min(v.Depth, balAmount)
+		if amountin == balAmount {
+			amountin -= osmo.GAS_FEE
+		}
+		tokenMinOUt := strconv.FormatUint(amountin, 10)
+		if float64(amountin)*(1) > float64(v.Depth) {
 			continue
 		}
-		var balAmount uint64
-		for _, v := range balance.Balances {
-			if v.Denom == OSMO_DENOM {
-				balAmount, err = strconv.ParseUint(v.Amount, 10, 64)
-				if err != nil {
-					ctx.Logger.Errorf("%v", err)
-				}
-				break
-			}
-		}
-		accnum, err := strconv.ParseUint(acc.Account.AccountNumber, 10, 64)
-		if err != nil {
-			ctx.Logger.Errorf("%v", err)
-			continue
-		}
-		txs := make([]string, 0, 0)
-		RoterLock.Lock()
-		for i, v := range TransactionRouters {
-			amountin := Min(v.Depth, balAmount)
-			if amountin == balAmount {
-				amountin -= osmo.GAS_FEE
-			}
-			tokenMinOUt := strconv.FormatUint(amountin, 10)
-			if float64(amountin)*(1) > float64(v.Depth) {
+		if float64(amountin)*(v.Ratio-1) > float64(osmo.GAS_FEE) {
+			fmt.Printf("hope profit is: %v:amount is %d:ratio is %v:bal is %v:depth is %v \n",
+				float64(amountin)*(v.Ratio-1), amountin, v.Ratio, balAmount, v.Depth)
+			ctx.Logger.Debugf("hope profit is: %v:amount is %d:ratio is %v\n", float64(amountin)*(v.Ratio-1), amountin-osmo.GAS_FEE, v.Ratio)
+			resp, err := osmo.SendOsmoTx(ctx, MNEMONIC, OSMO_DENOM, tokenMinOUt, amountin, seq, accnum, v.PoolIds, v.TokenOutDenom)
+			if err != nil {
+				ctx.Logger.Errorf("%d tx err:%v", i, err)
 				continue
 			}
-			if float64(amountin)*(v.Ratio-1) > float64(osmo.GAS_FEE) {
-				fmt.Printf("hope profit is: %v:amount is %d:ratio is %v:bal is %v:depth is %v \n",
-					float64(amountin)*(v.Ratio-1), amountin, v.Ratio, balAmount, v.Depth)
-				ctx.Logger.Debugf("hope profit is: %v:amount is %d:ratio is %v\n", float64(amountin)*(v.Ratio-1), amountin-osmo.GAS_FEE, v.Ratio)
-				resp, err := osmo.SendOsmoTx(ctx, MNEMONIC, OSMO_DENOM, tokenMinOUt, amountin, seq, accnum, v.PoolIds, v.TokenOutDenom)
+			if resp == nil {
+				continue
+			} else if resp.Code == 0 {
+				seq++
+				balAmount -= amountin + osmo.GAS_FEE
+				txs = append(txs, resp.TxHash)
+
+			} else if resp.Code == 32 {
+				acc, err := osmo.QueryOsmoAccountInfo(ctx, address)
 				if err != nil {
-					ctx.Logger.Errorf("%d tx err:%v", i, err)
-					continue
+					ctx.Logger.Errorf("%v", err)
+					panic(err)
 				}
-				if resp == nil {
-					continue
-				} else if resp.Code == 0 {
-					seq++
-					balAmount -= amountin + osmo.GAS_FEE
-					txs = append(txs, resp.TxHash)
-
-				} else if resp.Code == 32 {
-					acc, err := osmo.QueryOsmoAccountInfo(ctx, address)
-					if err != nil {
-						ctx.Logger.Errorf("%v", err)
-						panic(err)
-					}
-					seq, err = strconv.ParseUint(acc.Account.Sequence, 10, 64)
-				}
-
+				seq, err = strconv.ParseUint(acc.Account.Sequence, 10, 64)
 			}
-			if balAmount <= osmo.GAS_FEE*3 {
-				break
-			}
+
 		}
-		RoterLock.Unlock()
-		for {
-			ok, err := osmo.IsOsmoSuccess(ctx, txs...)
-			if err != nil {
-				ctx.Logger.Errorf("query tx err happend!:%v\n", err)
-				break
-			}
-			if ok {
-				break
-			}
-			time.Sleep(7 * time.Second)
+		if balAmount <= osmo.GAS_FEE*3 {
+			break
 		}
-
 	}
-	ctx.Wg.Done()
+	for {
+		ok, err := osmo.IsOsmoSuccess(ctx, txs...)
+		if err != nil {
+			ctx.Logger.Errorf("query tx err happend!:%v\n", err)
+			break
+		}
+		if ok {
+			break
+		}
+		time.Sleep(7 * time.Second)
+	}
+
 }
 
 func Min(x, y uint64) uint64 {
