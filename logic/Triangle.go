@@ -216,7 +216,6 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 	}
 	fmt.Println("send osmo triangle start!!!")
 	fmt.Println("address is:" + address)
-	time.Sleep(3 * time.Second)
 	fmt.Println("sleeping end!")
 	acc, err := osmo.QueryOsmoAccountInfo(ctx, address)
 	if err != nil {
@@ -286,6 +285,7 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 			break
 		}
 	}
+	fmt.Println("finish send msg!!!"+"tx is:", txs)
 	for {
 		ok, err := osmo.IsOsmoSuccess(ctx, txs...)
 		if err != nil {
