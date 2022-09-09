@@ -13,7 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	asigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	atx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	atypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/osmosis-labs/osmosis/v11/app"
@@ -22,12 +21,14 @@ import (
 	"github.com/xbdyhh/OsmoTxBot/tool"
 	"github.com/xbdyhh/OsmoTxBot/tool/module"
 	"google.golang.org/grpc"
+	"net/http"
 	"os"
 )
 
 const (
 	GAS_LIMIT           = 1000000
 	GRPC_SERVER_ADDRESS = "65.108.141.109:9090"
+	REST_ADDRESS        = "http://65.108.141.109:1317/"
 	CHAIN_ID            = "osmosis-1"
 	ACCOUNT_ADDR        = "osmo16kydz6vznpgtpgws733panrs6atdsefcfxa97j"
 	GAS_FEE             = 0
@@ -36,10 +37,6 @@ const (
 var Ccontext = client.Context{}.WithChainID(CHAIN_ID)
 
 func InitCcontext() {
-	grpcConn, _ := grpc.Dial(
-		GRPC_SERVER_ADDRESS, // your gRPC server address.
-		grpc.WithInsecure(), // The SDK doesn't support any transport security mechanism.
-	)
 	encodingConfig := app.MakeEncodingConfig()
 	Ccontext = Ccontext.WithCodec(encodingConfig.Marshaler).
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
@@ -49,18 +46,17 @@ func InitCcontext() {
 		WithAccountRetriever(atypes.AccountRetriever{}).
 		WithBroadcastMode(flags.BroadcastSync).
 		WithViper("OSMOSIS").
-		WithSignModeStr(flags.SignModeDirect).
-		WithGRPCClient(grpcConn)
+		WithSignModeStr(flags.SignModeDirect)
 	conf := sdk.GetConfig()
 	conf.SetBech32PrefixForAccount("osmo", "osmopub")
 }
 func IsOsmoSuccess(ctx *tool.MyContext, hashes ...string) (bool, error) {
 	for _, hash := range hashes {
-		res, err := atx.QueryTx(Ccontext, hash)
+		res, err := http.Get(REST_ADDRESS + "cosmos/tx/v1beta1/txs/" + hash)
 		if err != nil {
 			return false, err
 		}
-		if res.Empty() {
+		if res.StatusCode == 400 {
 			return false, nil
 		}
 	}

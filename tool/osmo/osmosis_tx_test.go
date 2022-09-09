@@ -27,15 +27,15 @@ func TestQueryOsmoBalanceInfo(t *testing.T) {
 	fmt.Println(amount)
 }
 
-func TestQueryOSMOPoolInfo(t *testing.T) {
-	InitCcontext()
-	ctx := tool.InitMyContext()
-	pool, err := QueryOsmoPoolInfo(ctx)
-	if err != nil {
-		t.Errorf("%v", err)
-	}
-	fmt.Println(len(pool.Pools))
-}
+//func TestQueryOSMOPoolInfo(t *testing.T) {
+//	InitCcontext()
+//	ctx := tool.InitMyContext()
+//	pool, err := QueryOsmoPoolInfo(ctx)
+//	if err != nil {
+//		t.Errorf("%v", err)
+//	}
+//	fmt.Println(len(pool.Pools))
+//}
 
 //func TestSendTx(t *testing.T) {
 //	InitCcontext()
@@ -45,9 +45,18 @@ func TestQueryOSMOPoolInfo(t *testing.T) {
 //		[]string{"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2"})
 //}
 
-func TestSendTx2(t *testing.T) {
+//func TestSendTx2(t *testing.T) {
+//	InitCcontext()
+//	ctx := tool.InitMyContext()
+//	SendOsmoTx2(ctx, &Ccontext, "enroll saddle syrup movie steak tunnel invest old trophy brown angry multiply", "osmo16kydz6vznpgtpgws733panrs6atdsefcfxa97j", 44, 656400, "uosmo", "100", 1000, []uint64{1, 1},
+//		[]string{"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2", "uosmo"})
+//}
+
+func TestIsOsmoSuccess(t *testing.T) {
 	InitCcontext()
 	ctx := tool.InitMyContext()
-	SendOsmoTx2(ctx, &Ccontext, "enroll saddle syrup movie steak tunnel invest old trophy brown angry multiply", "osmo16kydz6vznpgtpgws733panrs6atdsefcfxa97j", 44, 656400, "uosmo", "100", 1000, []uint64{1, 1},
-		[]string{"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2", "uosmo"})
+	ok, err := IsOsmoSuccess(ctx, "BBFBEFC889E1B506612405F3F88982AA333D928A3D0430D586012DB933B651B8", "7228BA7DCD97099E9E2F72EAE976D804541D54E0914AA38FB24ABC4816BAFF05")
+	if err != nil || !ok {
+		t.Errorf("an err happend%v", err)
+	}
 }
