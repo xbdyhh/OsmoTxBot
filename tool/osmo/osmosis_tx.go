@@ -36,6 +36,10 @@ const (
 var Ccontext = client.Context{}.WithChainID(CHAIN_ID)
 
 func InitCcontext() {
+	grpcConn, _ := grpc.Dial(
+		GRPC_SERVER_ADDRESS, // your gRPC server address.
+		grpc.WithInsecure(), // The SDK doesn't support any transport security mechanism.
+	)
 	encodingConfig := app.MakeEncodingConfig()
 	Ccontext = Ccontext.WithCodec(encodingConfig.Marshaler).
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
@@ -45,7 +49,8 @@ func InitCcontext() {
 		WithAccountRetriever(atypes.AccountRetriever{}).
 		WithBroadcastMode(flags.BroadcastSync).
 		WithViper("OSMOSIS").
-		WithSignModeStr(flags.SignModeDirect)
+		WithSignModeStr(flags.SignModeDirect).
+		WithGRPCClient(grpcConn)
 	conf := sdk.GetConfig()
 	conf.SetBech32PrefixForAccount("osmo", "osmopub")
 }
