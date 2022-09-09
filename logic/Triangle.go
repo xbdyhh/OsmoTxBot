@@ -274,6 +274,7 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 				} else if resp.Code == 0 {
 					seq++
 					balAmount -= amountin + osmo.GAS_FEE
+					txs = append(txs, resp.TxHash)
 
 				} else if resp.Code == 32 {
 					acc, err := osmo.QueryOsmoAccountInfo(ctx, address)
