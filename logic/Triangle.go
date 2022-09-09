@@ -173,7 +173,8 @@ func DeleteLittlePools(ctx *tool.MyContext, pools *tm.Pools) ([]module.Pool, err
 			ok = ok || ok2
 		}
 		checkliquid, _ := strconv.ParseUint(v.PoolAssets[0].Token.Amount, 10, 64)
-		ok = ok || checkliquid < 100000000
+		checkliquid2, _ := strconv.ParseUint(v.PoolAssets[1].Token.Amount, 10, 64)
+		ok = ok || checkliquid < 100000000 || checkliquid2 < 100000000
 		if !ok {
 			pool := module.Pool{}
 			pool.ID, _ = strconv.ParseUint(v.ID, 10, 64)
