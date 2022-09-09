@@ -256,10 +256,10 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 			if amountin == balAmount {
 				amountin -= osmo.GAS_FEE
 			}
-			if amountin < 7703 {
+			tokenMinOUt := strconv.FormatUint(amountin, 10)
+			if float64(amountin)*(1) > float64(v.Depth) {
 				continue
 			}
-			tokenMinOUt := strconv.FormatUint(amountin, 10)
 			if float64(amountin)*(v.Ratio-1) > float64(osmo.GAS_FEE) {
 				fmt.Printf("hope profit is: %v:amount is %d:ratio is %v:bal is %v:depth is %v \n",
 					float64(amountin)*(v.Ratio-1), amountin, v.Ratio, balAmount, v.Depth)
