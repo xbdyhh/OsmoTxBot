@@ -68,7 +68,7 @@ here:
 			}
 		}
 	}
-	ctx.Logger.Info("fresh pools map done.")
+	ctx.Logger.Debug("fresh pools map done.")
 	time.Sleep(3 * time.Second)
 	return newPools
 }
@@ -141,7 +141,7 @@ func FreshPoolMap(ctx *tool.MyContext) {
 		//组合过滤
 		RoterLock.Lock()
 		TransactionRouters = SortRouters(ctx, routers)
-		ctx.Logger.Infof("Finally transaction routers is:%v\n", routers)
+		ctx.Logger.Debug("Finally transaction routers is:%v\n", routers)
 		RoterLock.Unlock()
 	}
 	ctx.Wg.Done()
@@ -256,11 +256,14 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 			if amountin == balAmount {
 				amountin -= osmo.GAS_FEE
 			}
+			if amountin < 7703 {
+				continue
+			}
 			tokenMinOUt := strconv.FormatUint(amountin, 10)
 			if float64(amountin)*(v.Ratio-1) > float64(osmo.GAS_FEE) {
 				fmt.Printf("hope profit is: %v:amount is %d:ratio is %v:bal is %v:depth is %v \n",
 					float64(amountin)*(v.Ratio-1), amountin, v.Ratio, balAmount, v.Depth)
-				ctx.Logger.Infof("hope profit is: %v:amount is %d:ratio is %v\n", float64(amountin)*(v.Ratio-1), amountin-osmo.GAS_FEE, v.Ratio)
+				ctx.Logger.Debugf("hope profit is: %v:amount is %d:ratio is %v\n", float64(amountin)*(v.Ratio-1), amountin-osmo.GAS_FEE, v.Ratio)
 				resp, err := osmo.SendOsmoTx(ctx, MNEMONIC, OSMO_DENOM, tokenMinOUt, amountin, seq, accnum, v.PoolIds, v.TokenOutDenom)
 				if err != nil {
 					ctx.Logger.Errorf("%d tx err:%v", i, err)
@@ -297,7 +300,7 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 			if ok {
 				break
 			}
-			time.Sleep(5 * time.Second)
+			time.Sleep(7 * time.Second)
 		}
 
 	}

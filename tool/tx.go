@@ -76,6 +76,7 @@ func BrocastTransaction(ctx *MyContext, GRPC_SERVER_ADDRESS string, txBytes []by
 	}
 
 	fmt.Println(grpcRes.TxResponse)
+	ctx.Logger.Infof("%v", grpcRes.TxResponse)
 	defer grpcConn.Close()
 	return grpcRes.TxResponse, nil
 }

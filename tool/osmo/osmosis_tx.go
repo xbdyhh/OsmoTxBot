@@ -267,7 +267,6 @@ func SendOsmoTx(ctx *tool.MyContext, mnemonic, tokenInDemon, tokenOutMinAmtStr s
 	}
 	fmt.Println(string(txJSONBytes))
 	ctx.Logger.Infof("sended msg is:%v", string(txJSONBytes))
-	ctx.Logger.Infof("Signed tx is:%v", string(txJSONBytes))
 	res, err := tool.BrocastTransaction(ctx, GRPC_SERVER_ADDRESS, txBytes)
 	return res, nil
 }
