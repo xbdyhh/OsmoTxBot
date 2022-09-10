@@ -298,7 +298,7 @@ func SendOsmoTx(ctx *tool.MyContext, mnemonic, tokenInDemon, tokenOutMinAmtStr s
 	}
 	fmt.Println(string(txJSONBytes))
 	ctx.Logger.Infof("sended msg is:%v", string(txJSONBytes))
-	ok, err := QuerySimulate(ctx, txBytes)
+	ok, err := QuerySimulate(ctx, txJSONBytes)
 	if !ok {
 		fmt.Println("msg can't pass the simulate!!!")
 		return nil, err
