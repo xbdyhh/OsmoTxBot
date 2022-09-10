@@ -301,6 +301,7 @@ func SendOsmoTx(ctx *tool.MyContext, mnemonic, tokenInDemon, tokenOutMinAmtStr s
 	ok, err := QuerySimulate(ctx, txJSONBytes)
 	if !ok {
 		fmt.Println("msg can't pass the simulate!!!")
+		ctx.Logger.Infof("%v msg can't pass the simulate!!!", routerids)
 		return nil, err
 	}
 
