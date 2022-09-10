@@ -21,8 +21,10 @@ import (
 	"github.com/xbdyhh/OsmoTxBot/tool"
 	"github.com/xbdyhh/OsmoTxBot/tool/module"
 	"google.golang.org/grpc"
+	"io/ioutil"
 	"net/http"
 	"os"
+	"strings"
 )
 
 const (
@@ -50,18 +52,46 @@ func InitCcontext() {
 	conf := sdk.GetConfig()
 	conf.SetBech32PrefixForAccount("osmo", "osmopub")
 }
-func IsOsmoSuccess(ctx *tool.MyContext, hashes ...string) (bool, error) {
+func IsSendSuccess(ctx *tool.MyContext, hashes ...string) (bool, error) {
 	for _, hash := range hashes {
 		res, err := http.Get(REST_ADDRESS + "cosmos/tx/v1beta1/txs/" + hash)
 		if err != nil {
 			return false, err
 		}
-		if res.StatusCode == 400 {
+		if res.StatusCode != 200 {
 			return false, nil
 		}
+		res.Body.Close()
 	}
 	return true, nil
 }
+
+func QuerySimulate(ctx *tool.MyContext, body []byte) (bool, error) {
+	txmsg := &module.TxMsg{}
+	err := json.Unmarshal(body, txmsg)
+	if err != nil {
+		return false, fmt.Errorf("unmarshal json err:%v", err)
+	}
+	bodystr := module.SimulateBody{
+		Txmsg:   *txmsg,
+		TxBytes: "",
+	}
+	bodystr2, err := json.Marshal(bodystr)
+	if err != nil {
+		return false, fmt.Errorf("marshal json err:%v", err)
+	}
+	res, err := http.Post(REST_ADDRESS+"cosmos/tx/v1beta1/simulate", "application/json", strings.NewReader(string(bodystr2)))
+	defer res.Body.Close()
+	respByte, err := ioutil.ReadAll(res.Body)
+	resplogs := &module.SimulateResponse{}
+	json.Unmarshal(respByte, resplogs)
+	ctx.Logger.Infof("Simulate log is:%v\n", resplogs.Result.Log)
+	if res.StatusCode != 200 {
+		return false, nil
+	}
+	return true, nil
+}
+
 func QueryOsmoAccountInfo(ctx *tool.MyContext, address string) (*module.AccountInfo, error) {
 	myAddress, err := sdk.AccAddressFromBech32(address)
 	if err != nil {
@@ -268,6 +298,12 @@ func SendOsmoTx(ctx *tool.MyContext, mnemonic, tokenInDemon, tokenOutMinAmtStr s
 	}
 	fmt.Println(string(txJSONBytes))
 	ctx.Logger.Infof("sended msg is:%v", string(txJSONBytes))
+	ok, err := QuerySimulate(ctx, txBytes)
+	if !ok {
+		fmt.Println("msg can't pass the simulate!!!")
+		return nil, err
+	}
+
 	res, err := tool.BrocastTransaction(ctx, GRPC_SERVER_ADDRESS, txBytes)
 	return res, nil
 }
