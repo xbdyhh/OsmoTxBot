@@ -291,7 +291,7 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 		if err != nil {
 			ctx.Logger.Errorf("query tx err happend!:%v\n", err)
 		}
-		if !ok {
+		if ok {
 			break
 		}
 		fmt.Println("query tx response is:", ok)
