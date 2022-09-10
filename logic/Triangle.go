@@ -251,7 +251,7 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 		if amountin == balAmount {
 			amountin -= osmo.GAS_FEE
 		}
-		tokenMinOUt := strconv.FormatUint(amountin, 10)
+		tokenMinOut := strconv.FormatUint(amountin+osmo.GAS_FEE, 10)
 		if float64(amountin)*(1) > float64(v.Depth) {
 			continue
 		}
@@ -259,7 +259,7 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 			fmt.Printf("hope profit is: %v:amount is %d:ratio is %v:bal is %v:depth is %v \n",
 				float64(amountin)*(v.Ratio-1), amountin, v.Ratio, balAmount, v.Depth)
 			ctx.Logger.Debugf("hope profit is: %v:amount is %d:ratio is %v\n", float64(amountin)*(v.Ratio-1), amountin-osmo.GAS_FEE, v.Ratio)
-			resp, err := osmo.SendOsmoTx(ctx, MNEMONIC, OSMO_DENOM, tokenMinOUt, amountin, seq, accnum, v.PoolIds, v.TokenOutDenom)
+			resp, err := osmo.SendOsmoTx(ctx, MNEMONIC, OSMO_DENOM, tokenMinOut, amountin, seq, accnum, v.PoolIds, v.TokenOutDenom)
 			if err != nil {
 				ctx.Logger.Errorf("%d tx err:%v", i, err)
 				continue
@@ -287,11 +287,11 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 	}
 	fmt.Println("finish send msg!!!"+"tx is:", txs)
 	for {
-		ok, err := osmo.IsOsmoSuccess(ctx, txs...)
+		ok, err := osmo.IsSendSuccess(ctx, txs...)
 		if err != nil {
 			ctx.Logger.Errorf("query tx err happend!:%v\n", err)
 		}
-		if ok {
+		if !ok {
 			break
 		}
 		fmt.Println("query tx response is:", ok)
