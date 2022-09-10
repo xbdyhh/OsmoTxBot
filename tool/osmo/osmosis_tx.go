@@ -33,7 +33,7 @@ const (
 	REST_ADDRESS        = "http://65.108.141.109:1317/"
 	CHAIN_ID            = "osmosis-1"
 	ACCOUNT_ADDR        = "osmo16kydz6vznpgtpgws733panrs6atdsefcfxa97j"
-	GAS_FEE             = 0
+	GAS_FEE             = 2500
 )
 
 var Ccontext = client.Context{}.WithChainID(CHAIN_ID)
@@ -55,13 +55,13 @@ func InitCcontext() {
 func IsSendSuccess(ctx *tool.MyContext, hashes ...string) (bool, error) {
 	for _, hash := range hashes {
 		res, err := http.Get(REST_ADDRESS + "cosmos/tx/v1beta1/txs/" + hash)
+		defer res.Body.Close()
 		if err != nil {
 			return false, err
 		}
 		if res.StatusCode != 200 {
 			return false, nil
 		}
-		res.Body.Close()
 	}
 	return true, nil
 }
