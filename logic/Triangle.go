@@ -27,7 +27,6 @@ func NewPoolMap(ctx *tool.MyContext) PoolMap {
 func (p PoolMap) FreshMap(ctx *tool.MyContext, pools []module.Pool) []module.Pool {
 	TransactionRouters = TransactionRouters[:0]
 	newPools := make([]module.Pool, 0, 0)
-here:
 	for _, v := range pools {
 		for _, from := range v.PoolAssets {
 			for _, to := range v.PoolAssets {
@@ -36,7 +35,6 @@ here:
 				}
 				if from.TokenDenom != OSMO_DENOM && to.TokenDenom != OSMO_DENOM {
 					newPools = append(newPools, v)
-					continue here
 				}
 				if _, ok := p[from.TokenDenom]; !ok {
 					p[from.TokenDenom] = make(map[string]module.Path)
@@ -94,9 +92,6 @@ func (p PoolMap) FindProfitMargins(ctx *tool.MyContext, pools []module.Pool, bal
 				}
 				path.GetRatio()
 				if ratio := path.Ratio * p[OSMO_DENOM][from.TokenDenom].Ratio * p[to.TokenDenom][OSMO_DENOM].Ratio; ratio > 1 {
-					fmt.Println(path.Ratio)
-					fmt.Println(p[OSMO_DENOM][from.TokenDenom].Ratio)
-					fmt.Println(p[to.TokenDenom][OSMO_DENOM].Ratio)
 					fmt.Println(ratio, " ", path.GetDepth())
 					ids := []uint64{p[OSMO_DENOM][from.TokenDenom].ID, path.ID, p[to.TokenDenom][OSMO_DENOM].ID}
 					fmt.Println(ids)
@@ -116,6 +111,48 @@ func (p PoolMap) FindProfitMargins(ctx *tool.MyContext, pools []module.Pool, bal
 			}
 		}
 	}
+	for _, v := range pools {
+	next4pool:
+		for _, from := range v.PoolAssets {
+			for _, to := range v.PoolAssets {
+				if to.TokenDenom == from.TokenDenom {
+					continue
+				}
+				path := module.Path{
+					ID:         v.ID,
+					Ratio:      0,
+					WeightFrom: from.Weight,
+					WeightTo:   to.Weight,
+					AmountFrom: from.Amount,
+					AmountTo:   to.Amount,
+					Fees:       v.SwapFees,
+				}
+				path.GetRatio()
+				for tokendemnom3, path3 := range p[to.TokenDenom] {
+					if ratio := path.Ratio * p[OSMO_DENOM][from.TokenDenom].Ratio * path3.Ratio * p[tokendemnom3][OSMO_DENOM].Ratio; ratio > 1 {
+						fmt.Println(ratio, " ", path.GetDepth())
+						ids := []uint64{p[OSMO_DENOM][from.TokenDenom].ID, path.ID, path3.ID, p[tokendemnom3][OSMO_DENOM].ID}
+						fmt.Println(ids)
+						fmt.Println()
+						out := []string{from.TokenDenom, to.TokenDenom, tokendemnom3, OSMO_DENOM}
+						depth1 := p[OSMO_DENOM][from.TokenDenom].GetDepth()
+						depth2 := uint64(float64(path.GetDepth()) / p[OSMO_DENOM][from.TokenDenom].Ratio)
+						depth3 := uint64(float64(p[to.TokenDenom][tokendemnom3].GetDepth()) / p[OSMO_DENOM][from.TokenDenom].Ratio / path.Ratio)
+						depth4 := uint64(float64(p[tokendemnom3][OSMO_DENOM].GetDepth()) / p[OSMO_DENOM][from.TokenDenom].Ratio / path.Ratio / path3.Ratio)
+						routers = append(routers, module.Router{
+							PoolIds:       ids,
+							TokenOutDenom: out,
+							Depth:         MinDepth(depth1, depth2, depth3, depth4, balance),
+							Ratio:         ratio,
+						})
+						break next4pool
+					}
+				}
+
+			}
+		}
+	}
+
 	routers = CombineRouters(ctx, routers)
 	return routers, nil
 }
