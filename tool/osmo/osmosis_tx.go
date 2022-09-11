@@ -28,12 +28,12 @@ import (
 )
 
 const (
-	GAS_LIMIT           = 1000000
+	GAS_LIMIT           = 280000
 	GRPC_SERVER_ADDRESS = "65.108.141.109:9090"
-	REST_ADDRESS        = "https://osmosis-mainnet-rpc.allthatnode.com:1317"
+	REST_ADDRESS        = "65.108.141.109:9090"
 	CHAIN_ID            = "osmosis-1"
 	ACCOUNT_ADDR        = "osmo16kydz6vznpgtpgws733panrs6atdsefcfxa97j"
-	GAS_FEE             = 1800
+	GAS_FEE             = 0
 )
 
 var Ccontext = client.Context{}.WithChainID(CHAIN_ID)
