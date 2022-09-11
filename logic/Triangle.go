@@ -221,7 +221,6 @@ func FreshPoolMap(ctx *tool.MyContext) {
 		ctx.Logger.Debugf("Finally transaction routers is:%v\n", routers)
 		SendOsmoTriTx(ctx)
 	}
-	ctx.Wg.Done()
 }
 
 func SortRouters(ctx *tool.MyContext, routers []module.Router) []module.Router {
@@ -362,17 +361,17 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 			break
 		}
 	}
-	fmt.Println("finish send msg!!!"+"tx is:", txs)
+	ctx.Logger.Infof("finish send msg!!!"+"tx is:", txs)
 	//等待全部交易完成
 	for {
 		ok, err := osmo.IsSendSuccess(ctx, txs...)
 		if err != nil {
 			ctx.Logger.Errorf("query tx err happend!:%v\n", err)
 		}
+		fmt.Println("query tx response is:", ok)
 		if ok {
 			break
 		}
-		fmt.Println("query tx response is:", ok)
 		time.Sleep(7 * time.Second)
 	}
 
