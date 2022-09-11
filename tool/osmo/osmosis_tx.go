@@ -91,7 +91,7 @@ func QuerySimulate(ctx *tool.MyContext, body []byte) (bool, error) {
 	respByte, err := ioutil.ReadAll(res.Body)
 	resplogs := &module.SimulateResponse{}
 	json.Unmarshal(respByte, resplogs)
-	ctx.Logger.Infof("Simulate log is:%v\n", resplogs.Result.Log)
+	ctx.Logger.Infof("Simulate gas info is:%v\n", resplogs.GasInfo)
 	if res.StatusCode != 200 {
 		return false, nil
 	}

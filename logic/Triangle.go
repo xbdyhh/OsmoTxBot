@@ -32,9 +32,6 @@ func (p PoolMap) FreshMap(ctx *tool.MyContext, pools []module.Pool) []module.Poo
 				if from.TokenDenom == to.TokenDenom {
 					continue
 				}
-				if from.TokenDenom != OSMO_DENOM && to.TokenDenom != OSMO_DENOM {
-					newPools = append(newPools, v)
-				}
 				if _, ok := p[from.TokenDenom]; !ok {
 					p[from.TokenDenom] = make(map[string]module.Path)
 				}
@@ -63,6 +60,9 @@ func (p PoolMap) FreshMap(ctx *tool.MyContext, pools []module.Pool) []module.Poo
 					}
 				}
 			}
+		}
+		if v.PoolAssets[0].TokenDenom != OSMO_DENOM && v.PoolAssets[1].TokenDenom != OSMO_DENOM {
+			newPools = append(newPools, v)
 		}
 	}
 	ctx.Logger.Debug("fresh pools map done.")
