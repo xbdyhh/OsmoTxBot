@@ -73,7 +73,8 @@ here:
 	return newPools
 }
 
-func (p PoolMap) FindProfitMargins(ctx *tool.MyContext, pools []module.Pool) ([]module.Router, error) {
+// 寻找兑换比率大于1的routers
+func (p PoolMap) FindProfitMargins(ctx *tool.MyContext, pools []module.Pool, balance uint64) ([]module.Router, error) {
 	routers := make([]module.Router, 0, 0)
 	for _, v := range pools {
 	nextpool:
@@ -107,7 +108,7 @@ func (p PoolMap) FindProfitMargins(ctx *tool.MyContext, pools []module.Pool) ([]
 					routers = append(routers, module.Router{
 						PoolIds:       ids,
 						TokenOutDenom: out,
-						Depth:         MinDepth(depth1, depth2, depth3),
+						Depth:         MinDepth(depth1, depth2, depth3, balance),
 						Ratio:         ratio,
 					})
 					break nextpool
@@ -115,7 +116,32 @@ func (p PoolMap) FindProfitMargins(ctx *tool.MyContext, pools []module.Pool) ([]
 			}
 		}
 	}
+	routers = CombineRouters(ctx, routers)
 	return routers, nil
+}
+
+// 组合routers以提高成功率
+func CombineRouters(ctx *tool.MyContext, routers []module.Router) []module.Router {
+	newrouters := make([]module.Router, 0, 0)
+	userouter := make(map[int]bool)
+	for i, v := range routers {
+		if !userouter[i] {
+			continue
+		}
+		router := v
+		for i2, to := range routers[i:] {
+			if router.TokenOutDenom[len(router.TokenOutDenom)-2] == to.TokenOutDenom[1] &&
+				float64(router.Depth)/float64(to.Depth) > 0.9 && float64(router.Depth)/float64(to.Depth) < 1.1 && !userouter[i2] {
+				router.PoolIds = append(router.PoolIds[0:len(router.TokenOutDenom)-2], to.PoolIds[1:]...)
+				router.TokenOutDenom = append(router.TokenOutDenom[0:len(router.TokenOutDenom)-2], to.TokenOutDenom[1:]...)
+				router.Depth = MinDepth(router.Depth, to.Depth)
+				router.Ratio = router.Ratio * to.Ratio
+				userouter[i] = true
+			}
+		}
+		newrouters = append(newrouters, router)
+	}
+	return newrouters
 }
 
 var TransactionRouters []module.Router
@@ -135,7 +161,24 @@ func FreshPoolMap(ctx *tool.MyContext) {
 		newpools := pMap.FreshMap(ctx, pools)
 		//遍历map去处与osmo直接相关的pool后，计算三角赔率（x*y*z*0.97*0.98*0.98），将大于1的添加入待执行名单
 		//得到切片1
-		routers, err := pMap.FindProfitMargins(ctx, newpools)
+		priv, err := tool.NewPrivateKeyByMnemonic(MNEMONIC)
+		if err != nil {
+
+			panic(err)
+		}
+		address, err := osmo.PrivateToOsmoAddress(priv)
+		if err != nil {
+			panic(err)
+		}
+
+		balance, err := osmo.QueryOsmoBalanceInfo(ctx, address)
+		var balamount uint64
+		for _, v := range balance.Balances {
+			if v.Denom == "uosmo" {
+				balamount, _ = strconv.ParseUint(v.Amount, 10, 64)
+			}
+		}
+		routers, err := pMap.FindProfitMargins(ctx, newpools, balamount)
 		//组合过滤
 		TransactionRouters = SortRouters(ctx, routers)
 		ctx.Logger.Debugf("Finally transaction routers is:%v\n", routers)
@@ -215,12 +258,10 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 		panic(err)
 	}
 	fmt.Println("send osmo triangle start!!!")
-	fmt.Println("address is:" + address)
-	fmt.Println("sleeping end!")
 	acc, err := osmo.QueryOsmoAccountInfo(ctx, address)
 	if err != nil {
 		ctx.Logger.Errorf("%v", err)
-		panic(err)
+		return
 	}
 	seq, err := strconv.ParseUint(acc.Account.Sequence, 10, 64)
 	if err != nil {
@@ -231,6 +272,7 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 	if err != nil {
 		ctx.Logger.Errorf("%v", err)
 	}
+	//查询钱包余额
 	var balAmount uint64
 	for _, v := range balance.Balances {
 		if v.Denom == OSMO_DENOM {
@@ -252,9 +294,7 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 			amountin -= osmo.GAS_FEE
 		}
 		tokenMinOut := strconv.FormatUint(amountin+osmo.GAS_FEE, 10)
-		if float64(amountin)*(1) > float64(v.Depth) {
-			continue
-		}
+		//判断利润是否达标
 		if float64(amountin)*(v.Ratio-1) > float64(osmo.GAS_FEE) {
 			fmt.Printf("hope profit is: %v:amount is %d:ratio is %v:bal is %v:depth is %v \n",
 				float64(amountin)*(v.Ratio-1), amountin, v.Ratio, balAmount, v.Depth)
@@ -286,6 +326,7 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 		}
 	}
 	fmt.Println("finish send msg!!!"+"tx is:", txs)
+	//等待全部交易完成
 	for {
 		ok, err := osmo.IsSendSuccess(ctx, txs...)
 		if err != nil {
