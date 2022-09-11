@@ -122,10 +122,11 @@ func (p PoolMap) FindProfitMargins(ctx *tool.MyContext, pools []module.Pool, bal
 
 // 组合routers以提高成功率
 func CombineRouters(ctx *tool.MyContext, routers []module.Router) []module.Router {
+	ctx.Logger.Debug("meta router is:", routers)
 	newrouters := make([]module.Router, 0, 0)
 	userouter := make(map[int]bool)
 	for i, v := range routers {
-		if !userouter[i] {
+		if userouter[i] {
 			continue
 		}
 		router := v
