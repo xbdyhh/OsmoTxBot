@@ -8,7 +8,6 @@ import (
 	tm "github.com/xbdyhh/OsmoTxBot/tool/module"
 	"github.com/xbdyhh/OsmoTxBot/tool/osmo"
 	"regexp"
-	"sort"
 	"strconv"
 	"time"
 )
@@ -232,9 +231,9 @@ func SortRouters(ctx *tool.MyContext, routers []module.Router) []module.Router {
 			newRouters = append(newRouters, v)
 		}
 	}
-	sort.SliceStable(routers, func(i, j int) bool {
-		return float64(routers[i].Depth)*routers[i].Ratio > float64(routers[j].Depth)*routers[j].Ratio
-	})
+	//sort.SliceStable(routers, func(i, j int) bool {
+	//	return float64(routers[i].Depth)*routers[i].Ratio > float64(routers[j].Depth)*routers[j].Ratio
+	//})
 	return newRouters
 }
 
