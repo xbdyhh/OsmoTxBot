@@ -21,6 +21,7 @@ import (
 	"github.com/xbdyhh/OsmoTxBot/tool"
 	"github.com/xbdyhh/OsmoTxBot/tool/module"
 	"google.golang.org/grpc"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -30,7 +31,7 @@ import (
 const (
 	GAS_LIMIT           = 280000
 	GRPC_SERVER_ADDRESS = "65.108.141.109:9090"
-	REST_ADDRESS        = "65.108.141.109:9090"
+	REST_ADDRESS        = "https://osmosis-mainnet-rpc.allthatnode.com:1317/"
 	CHAIN_ID            = "osmosis-1"
 	ACCOUNT_ADDR        = "osmo16kydz6vznpgtpgws733panrs6atdsefcfxa97j"
 	GAS_FEE             = 0
@@ -81,7 +82,12 @@ func QuerySimulate(ctx *tool.MyContext, body []byte) (bool, error) {
 		return false, fmt.Errorf("marshal json err:%v", err)
 	}
 	res, err := http.Post(REST_ADDRESS+"cosmos/tx/v1beta1/simulate", "application/json", strings.NewReader(string(bodystr2)))
-	defer res.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			ctx.Logger.Errorf("%v", err)
+		}
+	}(res.Body)
 	respByte, err := ioutil.ReadAll(res.Body)
 	resplogs := &module.SimulateResponse{}
 	json.Unmarshal(respByte, resplogs)
