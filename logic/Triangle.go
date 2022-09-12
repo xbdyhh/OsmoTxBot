@@ -8,6 +8,7 @@ import (
 	tm "github.com/xbdyhh/OsmoTxBot/tool/module"
 	"github.com/xbdyhh/OsmoTxBot/tool/osmo"
 	"regexp"
+	"sort"
 	"strconv"
 	"time"
 )
@@ -73,8 +74,30 @@ func (p PoolMap) FreshMap(ctx *tool.MyContext, pools []module.Pool) []module.Poo
 // 寻找兑换比率大于1的routers
 func (p PoolMap) FindProfitMargins(ctx *tool.MyContext, pools []module.Pool, balance uint64) ([]module.Router, error) {
 	routers := make([]module.Router, 0, 0)
+	for fromkey, from := range p[OSMO_DENOM] {
+		for tokey, to := range p {
+			if fromkey == tokey {
+				if ratio := to[OSMO_DENOM].Ratio * from.Ratio; ratio > 1 {
+					ids := []uint64{from.ID, to[OSMO_DENOM].ID}
+					fmt.Println(ids)
+					fmt.Println()
+					out := []string{tokey, OSMO_DENOM}
+					depth1 := from.GetDepth()
+					depth2 := uint64(float64(to[OSMO_DENOM].GetDepth()) / from.Ratio)
+					routers = append(routers, module.Router{
+						PoolIds:       ids,
+						TokenOutDenom: out,
+						Depth:         MinDepth(depth1, depth2, balance),
+						Ratio:         ratio,
+					})
+
+				}
+			}
+		}
+	}
+
 	for _, v := range pools {
-	nextpool:
+	next3pool:
 		for _, from := range v.PoolAssets {
 			for _, to := range v.PoolAssets {
 				if to.TokenDenom == from.TokenDenom {
@@ -105,7 +128,7 @@ func (p PoolMap) FindProfitMargins(ctx *tool.MyContext, pools []module.Pool, bal
 						Depth:         MinDepth(depth1, depth2, depth3, balance),
 						Ratio:         ratio,
 					})
-					break nextpool
+					break next3pool
 				}
 			}
 		}
@@ -230,9 +253,9 @@ func SortRouters(ctx *tool.MyContext, routers []module.Router) []module.Router {
 			newRouters = append(newRouters, v)
 		}
 	}
-	//sort.SliceStable(routers, func(i, j int) bool {
-	//	return float64(routers[i].Depth)*routers[i].Ratio > float64(routers[j].Depth)*routers[j].Ratio
-	//})
+	sort.SliceStable(routers, func(i, j int) bool {
+		return float64(routers[i].Depth)*routers[i].Ratio > float64(routers[j].Depth)*routers[j].Ratio
+	})
 	return newRouters
 }
 
