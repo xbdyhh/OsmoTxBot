@@ -56,7 +56,7 @@ func (p PoolMap) FreshMap(ctx *tool.MyContext, pools []module.Pool, bal uint64) 
 					if from.TokenDenom == OSMO_DENOM && from.Amount < 10000000 {
 						continue
 					}
-					if oldpath.Ratio < path.Ratio {
+					if oldpath.Ratio < path.Ratio || oldpath.GetDepth(bal) <= path.GetDepth(bal) {
 						p[from.TokenDenom][to.TokenDenom] = path
 					}
 				}
@@ -151,10 +151,7 @@ func (p PoolMap) FindProfitMargins(ctx *tool.MyContext, pools []module.Pool, bal
 				path.GetRatio(balance)
 				for tokendemnom3, path3 := range p[to.TokenDenom] {
 					if ratio := path.Ratio * p[OSMO_DENOM][from.TokenDenom].Ratio * path3.Ratio * p[tokendemnom3][OSMO_DENOM].Ratio; ratio > 1 {
-						fmt.Println(ratio, " ", path.GetDepth(balance))
 						ids := []uint64{p[OSMO_DENOM][from.TokenDenom].ID, path.ID, path3.ID, p[tokendemnom3][OSMO_DENOM].ID}
-						fmt.Println(ids)
-						fmt.Println()
 						out := []string{from.TokenDenom, to.TokenDenom, tokendemnom3, OSMO_DENOM}
 						depth1 := p[OSMO_DENOM][from.TokenDenom].GetDepth(balance)
 						depth2 := uint64(float64(path.GetDepth(balance)) / p[OSMO_DENOM][from.TokenDenom].Ratio)
