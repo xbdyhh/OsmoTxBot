@@ -24,11 +24,12 @@ type PoolAsset struct {
 
 func (p *Path) GetRatio(bal uint64) {
 	p.Ratio = (float64(p.WeightFrom) / float64(p.WeightTo)) *
-		(p.AmountTo / (p.AmountFrom + float64(p.GetDepth(bal)))) * (1 - p.Fees)
+		(p.AmountTo / (p.AmountFrom + float64(p.GetDepth(bal)))) *
+		(1 - p.Fees)
 }
 func (p Path) GetDepth(bal uint64) uint64 {
-	if bal > uint64(0.03*float64(p.AmountFrom)) {
-		return uint64(0.03 * float64(p.AmountFrom))
+	if bal > uint64(0.02*float64(p.AmountFrom)) {
+		return uint64(0.02 * float64(p.AmountFrom))
 	}
 	return bal
 }
