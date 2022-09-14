@@ -28,7 +28,7 @@ func (p *Path) GetRatio(bal uint64) {
 }
 func (p Path) GetDepth(bal uint64) uint64 {
 	if bal > uint64(0.03*float64(p.AmountFrom)) {
-		return uint64(0.01 * float64(p.AmountFrom))
+		return uint64(0.03 * float64(p.AmountFrom))
 	}
 	return bal
 }
