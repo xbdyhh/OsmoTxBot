@@ -6,12 +6,12 @@ import (
 	lj "gopkg.in/natefinch/lumberjack.v2"
 )
 
-const LogName = "./Log/test.log"
+const LogName = "./log/test.log"
 
 func InitLogger() *zap.SugaredLogger {
 	writeSyncer := getLogWriter()
 	encoder := getEncoder()
-	core := zapcore.NewCore(encoder, writeSyncer, zapcore.DebugLevel)
+	core := zapcore.NewCore(encoder, writeSyncer, zapcore.InfoLevel)
 
 	logger := zap.New(core, zap.AddCaller())
 	sglog := logger.Sugar()

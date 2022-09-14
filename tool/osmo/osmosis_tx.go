@@ -83,6 +83,9 @@ func QuerySimulate(ctx *tool.MyContext, body []byte) (bool, error) {
 	}
 	res, err := http.Post(REST_ADDRESS+"cosmos/tx/v1beta1/simulate", "application/json", strings.NewReader(string(bodystr2)))
 	defer func(Body io.ReadCloser) {
+		if Body == nil {
+			return
+		}
 		err := Body.Close()
 		if err != nil {
 			ctx.Logger.Errorf("%v", err)
