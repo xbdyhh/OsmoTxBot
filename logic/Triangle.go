@@ -89,6 +89,7 @@ func (p PoolMap) FindProfitMargins(ctx *tool.MyContext, pools []module.Pool, bal
 	}
 
 	for _, v := range pools {
+	netpool3:
 		for _, fromAss := range v.PoolAssets {
 			for _, toAss := range v.PoolAssets {
 				if toAss.TokenDenom == fromAss.TokenDenom {
@@ -118,6 +119,7 @@ func (p PoolMap) FindProfitMargins(ctx *tool.MyContext, pools []module.Pool, bal
 								Depth:         MinDepth(depth1, depth2, depth3, balance),
 								Ratio:         ratio,
 							})
+							break netpool3
 						}
 					}
 				}
