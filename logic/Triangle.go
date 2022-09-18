@@ -24,7 +24,7 @@ type PoolMap map[string]map[string][]module.Path
 func NewPoolMap(ctx *tool.MyContext) PoolMap {
 	return make(map[string]map[string][]module.Path)
 }
-func (p PoolMap) FreshMap(ctx *tool.MyContext, pools []module.Pool, bal uint64) {
+func (p PoolMap) FreshMap(ctx *tool.MyContext, pools []module.Pool) {
 	TransactionRouters = TransactionRouters[:0]
 	for _, v := range pools {
 		for _, from := range v.PoolAssets {
@@ -48,11 +48,22 @@ func (p PoolMap) FreshMap(ctx *tool.MyContext, pools []module.Pool, bal uint64) 
 					Fees:       v.SwapFees,
 				}
 				path.GetRatio()
-				p[from.TokenDenom][to.TokenDenom] = append(p[from.TokenDenom][to.TokenDenom], path)
+				if !IsPoolIn(p[from.TokenDenom][to.TokenDenom], path.ID) {
+					p[from.TokenDenom][to.TokenDenom] = append(p[from.TokenDenom][to.TokenDenom], path)
+				}
 			}
 		}
 	}
 	ctx.Logger.Debug("fresh pools map done.")
+}
+
+func IsPoolIn(ids []module.Path, id uint64) bool {
+	for _, v := range ids {
+		if v.ID == id {
+			return true
+		}
+	}
+	return false
 }
 
 // 寻找兑换比率大于1的routers
@@ -99,15 +110,13 @@ func (p PoolMap) FindPath(ctx *tool.MyContext, ids []uint64, depth uint64, ratio
 	}
 	for key, patharr := range p[denom] {
 		for _, path := range patharr {
-			ids = append(ids, path.ID)
-			denoms = append(denoms, key)
 			depth2 := uint64(float64(path.GetDepth()) / ratio)
 			if depth == 0 {
 				depth = depth2
 			}
 			ratio = ratio * path.Ratio
 			depth = MinDepth(depth2, depth)
-			newrouters := p.FindPath(ctx, ids, depth, ratio, denoms, key)
+			newrouters := p.FindPath(ctx, append(ids, path.ID), depth, ratio, append(denoms, key), key)
 			routers = append(routers, newrouters...)
 		}
 	}
@@ -146,7 +155,7 @@ func FreshPoolMap(ctx *tool.MyContext) {
 		//删除流动性小于1000的pool
 		pools, err := DeleteLittlePools(ctx, res)
 		//生成最低直接路径的pool map
-		pMap.FreshMap(ctx, pools, balamount)
+		pMap.FreshMap(ctx, pools)
 		//遍历map去处与osmo直接相关的pool后，计算三角赔率（x*y*z*0.97*0.98*0.98），将大于1的添加入待执行名单
 		//得到切片1
 		routers, err := pMap.FindProfitMargins(ctx, balamount)
