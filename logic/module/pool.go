@@ -22,12 +22,12 @@ type PoolAsset struct {
 	Weight     uint64
 }
 
-func (p *Path) GetRatio(bal uint64) {
+func (p *Path) GetRatio() {
 	p.Ratio = (float64(p.WeightFrom) / float64(p.WeightTo)) *
-		(p.AmountTo / (p.AmountFrom + float64(p.GetDepth(bal)))) *
+		(p.AmountTo / (p.AmountFrom + float64(p.GetDepth()))) *
 		(1 - p.Fees)
 }
-func (p Path) GetDepth(bal uint64) uint64 {
+func (p Path) GetDepth() uint64 {
 	return uint64(0.01 * float64(p.AmountFrom))
 }
 
