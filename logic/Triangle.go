@@ -75,8 +75,12 @@ func (p PoolMap) FindProfitMargins(ctx *tool.MyContext, balance uint64) ([]modul
 	return routers, nil
 }
 
-func (p PoolMap) FindPath(ctx *tool.MyContext, ids []uint64, depth uint64, ratio float64, denoms []string, denom string) []module.Router {
+func (p PoolMap) FindPath(ctx *tool.MyContext, oldids []uint64, depth uint64, ratio float64, olddenoms []string, denom string) []module.Router {
 	routers := make([]module.Router, 0, 0)
+	ids := make([]uint64, 0, 0)
+	ids = append(ids, oldids...)
+	denoms := make([]string, 0, 0)
+	denoms = append(denoms, olddenoms...)
 	if len(denoms) != 0 && denoms[len(denoms)-1] == OSMO_DENOM {
 		if ratio > 1 {
 			routers = append(routers, module.Router{
