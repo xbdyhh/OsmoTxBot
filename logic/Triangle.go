@@ -126,7 +126,9 @@ func (p PoolMap) FindProfitMargins(ctx *tool.MyContext, pools []module.Pool, bal
 						}
 					}
 				}
-				routers = append(routers, router)
+				if router.PoolIds != nil {
+					routers = append(routers, router)
+				}
 				break nextpool3
 			}
 		}
@@ -174,7 +176,9 @@ func (p PoolMap) FindProfitMargins(ctx *tool.MyContext, pools []module.Pool, bal
 						}
 					}
 				}
-				routers = append(routers, router)
+				if router.PoolIds != nil {
+					routers = append(routers, router)
+				}
 				break next4pool
 			}
 		}
