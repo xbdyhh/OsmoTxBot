@@ -108,6 +108,7 @@ func (p PoolMap) FindProfitMargins(ctx *tool.MyContext, pools []module.Pool, bal
 				var router module.Router
 				for _, from := range p[OSMO_DENOM][fromAss.TokenDenom] {
 					for _, to := range p[toAss.TokenDenom][OSMO_DENOM] {
+						fmt.Println(path.Ratio, from.Ratio, to.Ratio)
 						if ratio := path.Ratio * from.Ratio * to.Ratio; ratio > 1 {
 							ids := []uint64{from.ID, path.ID, to.ID}
 							out := []string{fromAss.TokenDenom, toAss.TokenDenom, OSMO_DENOM}
