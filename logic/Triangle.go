@@ -89,7 +89,7 @@ func (p PoolMap) FindProfitMargins(ctx *tool.MyContext, pools []module.Pool, bal
 	}
 
 	for _, v := range pools {
-	netpool3:
+	nextpool3:
 		for _, fromAss := range v.PoolAssets {
 			for _, toAss := range v.PoolAssets {
 				if toAss.TokenDenom == fromAss.TokenDenom {
@@ -105,6 +105,7 @@ func (p PoolMap) FindProfitMargins(ctx *tool.MyContext, pools []module.Pool, bal
 					Fees:       v.SwapFees,
 				}
 				path.GetRatio(balance)
+				var router module.Router
 				for _, from := range p[OSMO_DENOM][fromAss.TokenDenom] {
 					for _, to := range p[toAss.TokenDenom][OSMO_DENOM] {
 						if ratio := path.Ratio * from.Ratio * to.Ratio; ratio > 1 {
@@ -113,16 +114,20 @@ func (p PoolMap) FindProfitMargins(ctx *tool.MyContext, pools []module.Pool, bal
 							depth1 := from.GetDepth(balance)
 							depth2 := uint64(float64(path.GetDepth(balance)) / from.Ratio)
 							depth3 := uint64(float64(to.GetDepth(balance)) / from.Ratio / path.Ratio)
-							routers = append(routers, module.Router{
-								PoolIds:       ids,
-								TokenOutDenom: out,
-								Depth:         MinDepth(depth1, depth2, depth3, balance),
-								Ratio:         ratio,
-							})
-							break netpool3
+							depth := MinDepth(depth1, depth2, depth3, balance)
+							if float64(depth)*ratio > float64(router.Depth)*router.Ratio {
+								router = module.Router{
+									PoolIds:       ids,
+									TokenOutDenom: out,
+									Depth:         depth,
+									Ratio:         ratio,
+								}
+							}
 						}
 					}
 				}
+				routers = append(routers, router)
+				break nextpool3
 			}
 		}
 	}
@@ -143,6 +148,7 @@ func (p PoolMap) FindProfitMargins(ctx *tool.MyContext, pools []module.Pool, bal
 					Fees:       v.SwapFees,
 				}
 				path.GetRatio(balance)
+				var router module.Router
 				for path3key, path3Arr := range p[to.TokenDenom] {
 					for _, path3 := range path3Arr {
 						for _, osmoFrom := range p[OSMO_DENOM][from.TokenDenom] {
@@ -154,18 +160,22 @@ func (p PoolMap) FindProfitMargins(ctx *tool.MyContext, pools []module.Pool, bal
 									depth2 := uint64(float64(path.GetDepth(balance)) / osmoFrom.Ratio)
 									depth3 := uint64(float64(path3.GetDepth(balance)) / osmoFrom.Ratio / path.Ratio)
 									depth4 := uint64(float64(osmoTo.GetDepth(balance)) / osmoFrom.Ratio / path.Ratio / path3.Ratio)
-									routers = append(routers, module.Router{
-										PoolIds:       ids,
-										TokenOutDenom: out,
-										Depth:         MinDepth(depth1, depth2, depth3, depth4, balance),
-										Ratio:         ratio,
-									})
-									break next4pool
+									depth := MinDepth(depth1, depth2, depth3, depth4, balance)
+									if float64(depth)*ratio > float64(router.Depth)*router.Ratio {
+										router = module.Router{
+											PoolIds:       ids,
+											TokenOutDenom: out,
+											Depth:         depth,
+											Ratio:         ratio,
+										}
+									}
 								}
 							}
 						}
 					}
 				}
+				routers = append(routers, router)
+				break next4pool
 			}
 		}
 	}
