@@ -184,33 +184,7 @@ func (p PoolMap) FindProfitMargins(ctx *tool.MyContext, pools []module.Pool, bal
 		}
 	}
 
-	routers = CombineRouters(ctx, routers)
 	return routers, nil
-}
-
-// 组合routers以提高成功率
-func CombineRouters(ctx *tool.MyContext, routers []module.Router) []module.Router {
-	ctx.Logger.Debug("meta router is:", routers)
-	newrouters := make([]module.Router, 0, 0)
-	userouter := make(map[int]bool)
-	for i, v := range routers {
-		if userouter[i] {
-			continue
-		}
-		router := v
-		for i2, to := range routers[i:] {
-			if router.TokenOutDenom[len(router.TokenOutDenom)-2] == to.TokenOutDenom[1] &&
-				float64(router.Depth)/float64(to.Depth) > 0.9 && float64(router.Depth)/float64(to.Depth) < 1.1 && !userouter[i2] {
-				router.PoolIds = append(router.PoolIds[0:len(router.TokenOutDenom)-2], to.PoolIds[1:]...)
-				router.TokenOutDenom = append(router.TokenOutDenom[0:len(router.TokenOutDenom)-2], to.TokenOutDenom[1:]...)
-				router.Depth = MinDepth(router.Depth, to.Depth)
-				router.Ratio = router.Ratio * to.Ratio
-				userouter[i] = true
-			}
-		}
-		newrouters = append(newrouters, router)
-	}
-	return newrouters
 }
 
 var TransactionRouters []module.Router
