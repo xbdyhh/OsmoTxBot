@@ -115,9 +115,7 @@ func (p PoolMap) FindPath(ctx *tool.MyContext, oldids []uint64, depth uint64, ra
 	for key, patharr := range p[denom] {
 		for _, path := range patharr {
 			depth2 := uint64(float64(path.GetDepth()) / ratio)
-			ratio = ratio * path.Ratio
-			depth = MinDepth(depth2, depth)
-			newrouters := p.FindPath(ctx, append(ids, path.ID), depth, ratio, append(denoms, key), key)
+			newrouters := p.FindPath(ctx, append(ids, path.ID), MinDepth(depth2, depth), ratio*path.Ratio, append(denoms, key), key)
 			routers = append(routers, newrouters...)
 		}
 	}
