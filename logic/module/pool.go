@@ -28,7 +28,7 @@ func (p *Path) GetRatio() {
 		(1 - p.Fees)
 }
 func (p Path) GetDepth() uint64 {
-	return uint64(0.01 * float64(p.AmountFrom))
+	return uint64(0.0002 * float64(p.AmountFrom))
 }
 
 type Router struct {
