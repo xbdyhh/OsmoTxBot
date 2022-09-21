@@ -71,7 +71,7 @@ func (p PoolMap) FindProfitMargins(ctx *tool.MyContext, balance uint64) ([]modul
 	routers := make([]module.Router, 0, 0)
 	ids := make([]uint64, 0, 0)
 	denoms := make([]string, 0, 0)
-	routers = p.FindPath(ctx, ids, 0, 1, denoms, OSMO_DENOM)
+	routers = p.FindPath(ctx, ids, 1000000000, 1, denoms, OSMO_DENOM)
 	return routers, nil
 }
 
@@ -115,9 +115,6 @@ func (p PoolMap) FindPath(ctx *tool.MyContext, oldids []uint64, depth uint64, ra
 	for key, patharr := range p[denom] {
 		for _, path := range patharr {
 			depth2 := uint64(float64(path.GetDepth()) / ratio)
-			if depth == 0 {
-				depth = depth2
-			}
 			ratio = ratio * path.Ratio
 			depth = MinDepth(depth2, depth)
 			newrouters := p.FindPath(ctx, append(ids, path.ID), depth, ratio, append(denoms, key), key)
