@@ -310,18 +310,18 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 	}
 	ctx.Logger.Infof("finish send msg!!!"+"tx is:", txs)
 	//等待全部交易完成
-	for {
-		ok, err := osmo.IsSendSuccess(ctx, txs...)
-		if err != nil {
-			ctx.Logger.Errorf("query tx err happend!:%v\n", err)
-		}
-		fmt.Println("query tx response is:", ok)
-		if ok {
-			break
-		}
-		time.Sleep(7 * time.Second)
-	}
-
+	//for {
+	//	ok, err := osmo.IsSendSuccess(ctx, txs...)
+	//	if err != nil {
+	//		ctx.Logger.Errorf("query tx err happend!:%v\n", err)
+	//	}
+	//	fmt.Println("query tx response is:", ok)
+	//	if ok {
+	//		break
+	//	}
+	//	time.Sleep(7 * time.Second)
+	//}
+	time.Sleep(time.Minute)
 }
 
 func Min(x, y uint64) uint64 {
