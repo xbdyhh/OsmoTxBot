@@ -167,6 +167,7 @@ func FreshPoolMap(ctx *tool.MyContext) {
 
 func SortRouters(ctx *tool.MyContext, routers []module.Router) []module.Router {
 	newRouters := make([]module.Router, 0, 0)
+	newRouters = routers
 	sort.SliceStable(routers, func(i, j int) bool {
 		return float64(routers[i].Depth)*routers[i].Ratio > float64(routers[j].Depth)*routers[j].Ratio
 	})
