@@ -83,9 +83,6 @@ func (p PoolMap) FindPath(ctx *tool.MyContext, oldids []uint64, depth uint64, ra
 	ids = append(ids, oldids...)
 	denoms := make([]string, 0, 0)
 	denoms = append(denoms, olddenoms...)
-	if len(ids) > 4 {
-		return routers
-	}
 	if len(denoms) != 0 && denoms[len(denoms)-1] == OSMO_DENOM {
 		totalPath++
 		if ratio > 1 && depth > 500000 {
@@ -104,11 +101,11 @@ func (p PoolMap) FindPath(ctx *tool.MyContext, oldids []uint64, depth uint64, ra
 				depth2 := uint64(float64(path.GetDepth()) / ratio)
 				ratio = ratio * path.Ratio
 				depth = MinDepth(depth2, depth)
-				ids = append(ids, path.ID)
-				denoms = append(denoms, OSMO_DENOM)
 				if ids[0] == 15 && ids[1] == 719 {
 					fmt.Println(len(ids), "  ", ratio)
 				}
+				ids = append(ids, path.ID)
+				denoms = append(denoms, OSMO_DENOM)
 				totalPath++
 				if ratio > 1 && depth > 500000 {
 					routers = append(routers, module.Router{
