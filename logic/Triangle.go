@@ -52,10 +52,6 @@ func (p PoolMap) FreshMap(ctx *tool.MyContext, pools []module.Pool) {
 				if !IsPoolIn(p[from.TokenDenom][to.TokenDenom], path.ID) {
 					p[from.TokenDenom][to.TokenDenom] = append(p[from.TokenDenom][to.TokenDenom], path)
 				}
-				if path.ID == 807 {
-					fmt.Println("path pool is:", p[from.TokenDenom][to.TokenDenom])
-				}
-
 			}
 		}
 	}
@@ -125,6 +121,9 @@ func (p PoolMap) FindPath(ctx *tool.MyContext, oldids []uint64, depth uint64, ra
 				newrouters := make([]module.Router, 0, 0)
 				if !IsIdIn(ids, path.ID) {
 					newrouters = p.FindPath(ctx, append(ids, path.ID), MinDepth(depth2, depth), ratio*path.Ratio, append(denoms, key), key)
+				}
+				if path.ID == 807 {
+					fmt.Println(ids)
 				}
 				routers = append(routers, newrouters...)
 			}
