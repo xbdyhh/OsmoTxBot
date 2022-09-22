@@ -17,6 +17,8 @@ const (
 	OSMO_DENOM = "uosmo"
 )
 
+var totalPath = 0
+
 // Pool[from][to]
 type PoolMap map[string]map[string][]module.Path
 
@@ -71,6 +73,7 @@ func (p PoolMap) FindProfitMargins(ctx *tool.MyContext, balance uint64) ([]modul
 	ids := make([]uint64, 0, 0)
 	denoms := make([]string, 0, 0)
 	routers = p.FindPath(ctx, ids, 1000000000, 1, denoms, OSMO_DENOM)
+	fmt.Println("total paths is:", totalPath)
 	return routers, nil
 }
 
@@ -82,6 +85,7 @@ func (p PoolMap) FindPath(ctx *tool.MyContext, oldids []uint64, depth uint64, ra
 	denoms = append(denoms, olddenoms...)
 	if len(denoms) != 0 && denoms[len(denoms)-1] == OSMO_DENOM {
 		fmt.Println(ids)
+		totalPath++
 		if ratio > 1 && depth > 500000 {
 			routers = append(routers, module.Router{
 				PoolIds:       ids,
@@ -101,6 +105,7 @@ func (p PoolMap) FindPath(ctx *tool.MyContext, oldids []uint64, depth uint64, ra
 				ids = append(ids, path.ID)
 				denoms = append(denoms, OSMO_DENOM)
 				fmt.Println(ids)
+				totalPath++
 				if ratio > 1 && depth > 500000 {
 					routers = append(routers, module.Router{
 						PoolIds:       ids,
@@ -149,6 +154,7 @@ func FreshPoolMap(ctx *tool.MyContext) {
 		panic(err)
 	}
 	for {
+		totalPath = 0
 		pMap := NewPoolMap(ctx)
 		//拉取数据
 		res, err := osmo.QueryOsmoPoolInfo(ctx)
