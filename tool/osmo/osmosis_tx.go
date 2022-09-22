@@ -301,16 +301,16 @@ func SendOsmoTx(ctx *tool.MyContext, mnemonic, tokenInDemon, tokenOutMinAmtStr s
 	if err != nil {
 		return nil, err
 	}
-	//txJSONBytes, err := Ccontext.TxConfig.TxJSONEncoder()(txBuilder.GetTx())
-	//if err != nil {
-	//	return nil, err
-	//}
-	//ok, err := QuerySimulate(ctx, txJSONBytes)
-	//if !ok {
-	//	fmt.Println("msg can't pass the simulate!!!")
-	//	ctx.Logger.Infof("%v msg can't pass the simulate!!!", routerids)
-	//	return nil, err
-	//}
+	txJSONBytes, err := Ccontext.TxConfig.TxJSONEncoder()(txBuilder.GetTx())
+	if err != nil {
+		return nil, err
+	}
+	ok, err := QuerySimulate(ctx, txJSONBytes)
+	if !ok {
+		//fmt.Println("msg can't pass the simulate!!!")
+		//ctx.Logger.Infof("%v msg can't pass the simulate!!!", routerids)
+		return nil, err
+	}
 
 	res, err := tool.BrocastTransaction(ctx, GRPC_SERVER_ADDRESS, txBytes)
 	return res, nil

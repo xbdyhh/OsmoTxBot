@@ -176,10 +176,6 @@ func FreshPoolMap(ctx *tool.MyContext) {
 		fmt.Println("map lenth is:", len(pMap))
 		//遍历map去处与osmo直接相关的pool后，计算三角赔率（x*y*z*0.97*0.98*0.98），将大于1的添加入待执行名单
 		//得到切片1
-		for k, v := range pMap {
-			fmt.Println(k, " to token num is:", len(v))
-		}
-		fmt.Println("____________________________________________")
 		routers, err := pMap.FindProfitMargins(ctx, balamount)
 		//组合过滤
 		TransactionRouters = SortRouters(ctx, routers)
@@ -204,32 +200,27 @@ func DeleteLittlePools(ctx *tool.MyContext, pools *tm.Pools) ([]module.Pool, err
 	}
 	ans := make([]module.Pool, 0, 0)
 	for _, v := range pools.Pools {
-		ok := false
 		//for _, val := range v.PoolAssets {
 		//	ok2, _ := regexp.Match("gamm.*", []byte(val.Token.Denom))
 		//	ok = ok || ok2
 		//}
-		checkliquid, _ := strconv.ParseUint(v.PoolAssets[0].Token.Amount, 10, 64)
-		checkliquid2, _ := strconv.ParseUint(v.PoolAssets[1].Token.Amount, 10, 64)
-		ok = ok || checkliquid < 100000000 || checkliquid2 < 100000000
-		if !ok {
-			pool := module.Pool{}
-			pool.ID, _ = strconv.ParseUint(v.ID, 10, 64)
-			pool.PoolAssets = module.PoolAssets{}
-			for _, asset := range v.PoolAssets {
-				var poolAsset = module.PoolAsset{}
-				var err error
-				poolAsset.TokenDenom = asset.Token.Denom
-				poolAsset.Amount, err = strconv.ParseFloat(asset.Token.Amount, 64)
-				if err != nil {
-					return nil, err
-				}
-				poolAsset.Weight, _ = strconv.ParseUint(asset.Weight, 10, 64)
-				pool.PoolAssets = append(pool.PoolAssets, poolAsset)
+		pool := module.Pool{}
+		pool.ID, _ = strconv.ParseUint(v.ID, 10, 64)
+		pool.PoolAssets = module.PoolAssets{}
+		for _, asset := range v.PoolAssets {
+			var poolAsset = module.PoolAsset{}
+			var err error
+			poolAsset.TokenDenom = asset.Token.Denom
+			poolAsset.Amount, err = strconv.ParseFloat(asset.Token.Amount, 64)
+			if err != nil {
+				return nil, err
 			}
-			pool.SwapFees, _ = strconv.ParseFloat(v.PoolParams.SwapFee, 64)
-			ans = append(ans, pool)
+			poolAsset.Weight, _ = strconv.ParseUint(asset.Weight, 10, 64)
+			pool.PoolAssets = append(pool.PoolAssets, poolAsset)
 		}
+		pool.SwapFees, _ = strconv.ParseFloat(v.PoolParams.SwapFee, 64)
+		ans = append(ans, pool)
+
 	}
 	return ans, nil
 }
