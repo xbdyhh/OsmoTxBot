@@ -125,24 +125,23 @@ func (p PoolMap) FindPath(ctx *tool.MyContext, oldids []uint64, depth uint64, ra
 var TransactionRouters []module.Router
 
 func FreshPoolMap(ctx *tool.MyContext) {
-	pMap := NewPoolMap(ctx)
+	priv, err := tool.NewPrivateKeyByMnemonic(MNEMONIC)
+	if err != nil {
+
+		panic(err)
+	}
+	address, err := osmo.PrivateToOsmoAddress(priv)
+	if err != nil {
+		panic(err)
+	}
 	for {
+		pMap := NewPoolMap(ctx)
 		//拉取数据
 		res, err := osmo.QueryOsmoPoolInfo(ctx)
 		if err != nil {
 			ctx.Logger.Errorf("pull pools err:%v", err)
 			continue
 		}
-		priv, err := tool.NewPrivateKeyByMnemonic(MNEMONIC)
-		if err != nil {
-
-			panic(err)
-		}
-		address, err := osmo.PrivateToOsmoAddress(priv)
-		if err != nil {
-			panic(err)
-		}
-
 		balance, err := osmo.QueryOsmoBalanceInfo(ctx, address)
 		var balamount uint64
 		for _, v := range balance.Balances {
@@ -150,11 +149,12 @@ func FreshPoolMap(ctx *tool.MyContext) {
 				balamount, _ = strconv.ParseUint(v.Amount, 10, 64)
 			}
 		}
-
 		//删除流动性小于1000的pool
 		pools, err := DeleteLittlePools(ctx, res)
 		//生成最低直接路径的pool map
+		fmt.Println("path poo is:", len(pools))
 		pMap.FreshMap(ctx, pools)
+		fmt.Println("map lenth is:", len(pMap))
 		//遍历map去处与osmo直接相关的pool后，计算三角赔率（x*y*z*0.97*0.98*0.98），将大于1的添加入待执行名单
 		//得到切片1
 		routers, err := pMap.FindProfitMargins(ctx, balamount)
