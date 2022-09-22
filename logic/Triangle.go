@@ -118,18 +118,20 @@ func (p PoolMap) FindPath(ctx *tool.MyContext, oldids []uint64, depth uint64, ra
 			}
 		}
 		return routers
-	}
-	for key, patharr := range p[denom] {
-		for _, path := range patharr {
-			depth2 := uint64(float64(path.GetDepth()) / ratio)
-			newrouters := make([]module.Router, 0, 0)
-			if !IsIdIn(ids, path.ID) {
-				newrouters = p.FindPath(ctx, append(ids, path.ID), MinDepth(depth2, depth), ratio*path.Ratio, append(denoms, key), key)
+	} else {
+		for key, patharr := range p[denom] {
+			for _, path := range patharr {
+				depth2 := uint64(float64(path.GetDepth()) / ratio)
+				newrouters := make([]module.Router, 0, 0)
+				if !IsIdIn(ids, path.ID) {
+					newrouters = p.FindPath(ctx, append(ids, path.ID), MinDepth(depth2, depth), ratio*path.Ratio, append(denoms, key), key)
+				}
+				routers = append(routers, newrouters...)
 			}
-			routers = append(routers, newrouters...)
 		}
+		return routers
+
 	}
-	return routers
 }
 
 func IsIdIn(ids []uint64, id uint64) bool {
@@ -207,23 +209,25 @@ func DeleteLittlePools(ctx *tool.MyContext, pools *tm.Pools) ([]module.Pool, err
 		//	ok2, _ := regexp.Match("gamm.*", []byte(val.Token.Denom))
 		//	ok = ok || ok2
 		//}
-		pool := module.Pool{}
-		pool.ID, _ = strconv.ParseUint(v.ID, 10, 64)
-		pool.PoolAssets = module.PoolAssets{}
-		for _, asset := range v.PoolAssets {
-			var poolAsset = module.PoolAsset{}
-			var err error
-			poolAsset.TokenDenom = asset.Token.Denom
-			poolAsset.Amount, err = strconv.ParseFloat(asset.Token.Amount, 64)
-			if err != nil {
-				return nil, err
+		num, _ := strconv.ParseUint(v.PoolAssets[0].Token.Amount, 10, 64)
+		if num > 100000 {
+			pool := module.Pool{}
+			pool.ID, _ = strconv.ParseUint(v.ID, 10, 64)
+			pool.PoolAssets = module.PoolAssets{}
+			for _, asset := range v.PoolAssets {
+				var poolAsset = module.PoolAsset{}
+				var err error
+				poolAsset.TokenDenom = asset.Token.Denom
+				poolAsset.Amount, err = strconv.ParseFloat(asset.Token.Amount, 64)
+				if err != nil {
+					return nil, err
+				}
+				poolAsset.Weight, _ = strconv.ParseUint(asset.Weight, 10, 64)
+				pool.PoolAssets = append(pool.PoolAssets, poolAsset)
 			}
-			poolAsset.Weight, _ = strconv.ParseUint(asset.Weight, 10, 64)
-			pool.PoolAssets = append(pool.PoolAssets, poolAsset)
+			pool.SwapFees, _ = strconv.ParseFloat(v.PoolParams.SwapFee, 64)
+			ans = append(ans, pool)
 		}
-		pool.SwapFees, _ = strconv.ParseFloat(v.PoolParams.SwapFee, 64)
-		ans = append(ans, pool)
-
 	}
 	return ans, nil
 }
