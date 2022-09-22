@@ -7,7 +7,6 @@ import (
 	"github.com/xbdyhh/OsmoTxBot/tool"
 	tm "github.com/xbdyhh/OsmoTxBot/tool/module"
 	"github.com/xbdyhh/OsmoTxBot/tool/osmo"
-	"regexp"
 	"sort"
 	"strconv"
 	"time"
@@ -187,10 +186,10 @@ func DeleteLittlePools(ctx *tool.MyContext, pools *tm.Pools) ([]module.Pool, err
 	ans := make([]module.Pool, 0, 0)
 	for _, v := range pools.Pools {
 		ok := false
-		for _, val := range v.PoolAssets {
-			ok2, _ := regexp.Match("gamm.*", []byte(val.Token.Denom))
-			ok = ok || ok2
-		}
+		//for _, val := range v.PoolAssets {
+		//	ok2, _ := regexp.Match("gamm.*", []byte(val.Token.Denom))
+		//	ok = ok || ok2
+		//}
 		checkliquid, _ := strconv.ParseUint(v.PoolAssets[0].Token.Amount, 10, 64)
 		checkliquid2, _ := strconv.ParseUint(v.PoolAssets[1].Token.Amount, 10, 64)
 		ok = ok || checkliquid < 100000000 || checkliquid2 < 100000000
