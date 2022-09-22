@@ -107,7 +107,7 @@ func (p PoolMap) FindPath(ctx *tool.MyContext, oldids []uint64, depth uint64, ra
 				ids = append(ids, path.ID)
 				denoms = append(denoms, OSMO_DENOM)
 				if ids[0] == 15 && ids[1] == 719 {
-					fmt.Println(ids, "  ", ratio)
+					fmt.Println(len(ids), "  ", ratio)
 				}
 				totalPath++
 				if ratio > 1 && depth > 500000 {
