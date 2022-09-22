@@ -34,7 +34,7 @@ const (
 	REST_ADDRESS        = "http://65.108.141.109:1317/"
 	CHAIN_ID            = "osmosis-1"
 	ACCOUNT_ADDR        = "osmo16kydz6vznpgtpgws733panrs6atdsefcfxa97j"
-	GAS_FEE             = 1800
+	GAS_FEE             = 420
 )
 
 var Ccontext = client.Context{}.WithChainID(CHAIN_ID)
@@ -281,10 +281,10 @@ func SignTx(txBuilder client.TxBuilder, priv ctypes.PrivKey, sequence uint64, ac
 }
 
 func SendOsmoTx(ctx *tool.MyContext, mnemonic, tokenInDemon, tokenOutMinAmtStr string, tokenInAmount uint64, sequence, accnum uint64,
-	routerids []uint64, routerdenoms []string) (*sdk.TxResponse, error) {
+	routerids []uint64, routerdenoms []string, gas int64) (*sdk.TxResponse, error) {
 	txBuilder := Ccontext.TxConfig.NewTxBuilder()
 	txBuilder.SetGasLimit(GAS_LIMIT)
-	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewInt64Coin("uosmo", GAS_FEE)))
+	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewInt64Coin("uosmo", gas)))
 	priv, err := tool.NewPrivateKeyByMnemonic(mnemonic)
 	if err != nil {
 		return nil, err

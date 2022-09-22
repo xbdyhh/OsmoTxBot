@@ -167,11 +167,6 @@ func FreshPoolMap(ctx *tool.MyContext) {
 
 func SortRouters(ctx *tool.MyContext, routers []module.Router) []module.Router {
 	newRouters := make([]module.Router, 0, 0)
-	for _, v := range routers {
-		if float64(v.Depth)*(v.Ratio-1) > osmo.GAS_FEE {
-			newRouters = append(newRouters, v)
-		}
-	}
 	sort.SliceStable(routers, func(i, j int) bool {
 		return float64(routers[i].Depth)*routers[i].Ratio > float64(routers[j].Depth)*routers[j].Ratio
 	})
@@ -269,15 +264,15 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 	for i, v := range TransactionRouters {
 		amountin := Min(v.Depth, balAmount)
 		if amountin == balAmount {
-			amountin -= osmo.GAS_FEE
+			amountin -= osmo.GAS_FEE * uint64(len(v.PoolIds))
 		}
-		tokenMinOut := strconv.FormatUint(amountin+osmo.GAS_FEE, 10)
+		tokenMinOut := strconv.FormatUint(amountin+osmo.GAS_FEE*uint64(len(v.PoolIds)), 10)
 		//判断利润是否达标
-		if float64(amountin)*(v.Ratio-1) > float64(osmo.GAS_FEE) {
+		if float64(amountin)*(v.Ratio-1) > float64(osmo.GAS_FEE*int64(len(v.PoolIds))) {
 			fmt.Printf("hope profit is: %v:amount is %d:ratio is %v:bal is %v:depth is %v \n",
 				float64(amountin)*(v.Ratio-1), amountin, v.Ratio, balAmount, v.Depth)
 			ctx.Logger.Debugf("hope profit is: %v:amount is %d:ratio is %v\n", float64(amountin)*(v.Ratio-1), amountin-osmo.GAS_FEE, v.Ratio)
-			resp, err := osmo.SendOsmoTx(ctx, MNEMONIC, OSMO_DENOM, tokenMinOut, amountin, seq, accnum, v.PoolIds, v.TokenOutDenom)
+			resp, err := osmo.SendOsmoTx(ctx, MNEMONIC, OSMO_DENOM, tokenMinOut, amountin, seq, accnum, v.PoolIds, v.TokenOutDenom, int64(len(v.PoolIds))*osmo.GAS_FEE)
 			if err != nil {
 				ctx.Logger.Errorf("%d tx err:%v", i, err)
 				continue
@@ -286,7 +281,7 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 				continue
 			} else if resp.Code == 0 {
 				seq++
-				balAmount -= amountin + osmo.GAS_FEE
+				balAmount -= amountin + osmo.GAS_FEE*uint64(len(v.PoolIds))
 				txs = append(txs, resp.TxHash)
 
 			} else if resp.Code == 32 {
