@@ -176,6 +176,8 @@ func FreshPoolMap(ctx *tool.MyContext) {
 		fmt.Println("map lenth is:", len(pMap))
 		//遍历map去处与osmo直接相关的pool后，计算三角赔率（x*y*z*0.97*0.98*0.98），将大于1的添加入待执行名单
 		//得到切片1
+		fmt.Println("osmo to token num is:", len(pMap[OSMO_DENOM]))
+		fmt.Println("____________________________________________")
 		routers, err := pMap.FindProfitMargins(ctx, balamount)
 		//组合过滤
 		TransactionRouters = SortRouters(ctx, routers)
