@@ -114,11 +114,24 @@ func (p PoolMap) FindPath(ctx *tool.MyContext, oldids []uint64, depth uint64, ra
 	for key, patharr := range p[denom] {
 		for _, path := range patharr {
 			depth2 := uint64(float64(path.GetDepth()) / ratio)
-			newrouters := p.FindPath(ctx, append(ids, path.ID), MinDepth(depth2, depth), ratio*path.Ratio, append(denoms, key), key)
+			newrouters := make([]module.Router, 0, 0)
+			if !IsIdIn(ids, path.ID) {
+				newrouters = p.FindPath(ctx, append(ids, path.ID), MinDepth(depth2, depth), ratio*path.Ratio, append(denoms, key), key)
+			}
 			routers = append(routers, newrouters...)
 		}
 	}
 	return routers
+}
+
+func IsIdIn(ids []uint64, id uint64) bool {
+	for _, v := range ids {
+		if v == id {
+			return true
+		}
+	}
+	return false
+
 }
 
 var TransactionRouters []module.Router
