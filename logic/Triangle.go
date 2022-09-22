@@ -152,7 +152,8 @@ func FreshPoolMap(ctx *tool.MyContext) {
 		//删除流动性小于1000的pool
 		pools, err := DeleteLittlePools(ctx, res)
 		//生成最低直接路径的pool map
-		fmt.Println("path poo is:", len(pools))
+		fmt.Println("path pool is:", len(pools))
+		fmt.Println("raw pool is:", len(res.Pools))
 		pMap.FreshMap(ctx, pools)
 		fmt.Println("map lenth is:", len(pMap))
 		//遍历map去处与osmo直接相关的pool后，计算三角赔率（x*y*z*0.97*0.98*0.98），将大于1的添加入待执行名单
