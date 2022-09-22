@@ -49,12 +49,13 @@ func (p PoolMap) FreshMap(ctx *tool.MyContext, pools []module.Pool) {
 					Fees:       v.SwapFees,
 				}
 				path.GetRatio()
-				if path.ID == 807 {
-					fmt.Println("path pool is:", path, from.TokenDenom, to.TokenDenom)
-				}
 				if !IsPoolIn(p[from.TokenDenom][to.TokenDenom], path.ID) {
 					p[from.TokenDenom][to.TokenDenom] = append(p[from.TokenDenom][to.TokenDenom], path)
 				}
+				if path.ID == 807 {
+					fmt.Println("path pool is:", p[from.TokenDenom][to.TokenDenom])
+				}
+
 			}
 		}
 	}
