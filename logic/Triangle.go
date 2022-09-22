@@ -49,6 +49,9 @@ func (p PoolMap) FreshMap(ctx *tool.MyContext, pools []module.Pool) {
 					Fees:       v.SwapFees,
 				}
 				path.GetRatio()
+				if path.ID == 807 {
+					fmt.Println("path pool is:", path, from.TokenDenom, to.TokenDenom)
+				}
 				if !IsPoolIn(p[from.TokenDenom][to.TokenDenom], path.ID) {
 					p[from.TokenDenom][to.TokenDenom] = append(p[from.TokenDenom][to.TokenDenom], path)
 				}
@@ -171,10 +174,7 @@ func FreshPoolMap(ctx *tool.MyContext) {
 		//删除流动性小于1000的pool
 		pools, err := DeleteLittlePools(ctx, res)
 		//生成最低直接路径的pool map
-		fmt.Println("path pool is:", len(pools))
-		fmt.Println("raw pool is:", len(res.Pools))
 		pMap.FreshMap(ctx, pools)
-		fmt.Println("map lenth is:", len(pMap))
 		//遍历map去处与osmo直接相关的pool后，计算三角赔率（x*y*z*0.97*0.98*0.98），将大于1的添加入待执行名单
 		//得到切片1
 		routers, err := pMap.FindProfitMargins(ctx, balamount)
