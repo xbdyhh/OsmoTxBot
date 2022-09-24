@@ -78,10 +78,10 @@ func (p PoolMap) FindProfitMargins(ctx *tool.MyContext, balance uint64) ([]modul
 }
 
 func (p PoolMap) FindPath(ctx *tool.MyContext, oldids []uint64, depth uint64, ratio float64, olddenoms []string, denom string) []module.Router {
-	ids := make([]uint64, 0, 10)
+	ids := make([]uint64, 0, len(oldids))
 	copy(ids, oldids)
 	routers := make([]module.Router, 0, 0)
-	denoms := make([]string, 0, 10)
+	denoms := make([]string, 0, len(oldids))
 	copy(denoms, olddenoms)
 	if len(denoms) != 0 && denoms[len(denoms)-1] == OSMO_DENOM {
 		totalPath++
@@ -95,7 +95,7 @@ func (p PoolMap) FindPath(ctx *tool.MyContext, oldids []uint64, depth uint64, ra
 		}
 		return routers
 	}
-	if len(ids) > 3 {
+	if len(ids) > 4 {
 		if patharr, ok := p[denom][OSMO_DENOM]; ok {
 			for _, path := range patharr {
 				depth2 := uint64(float64(path.GetDepth()) / ratio)
@@ -117,14 +117,10 @@ func (p PoolMap) FindPath(ctx *tool.MyContext, oldids []uint64, depth uint64, ra
 	}
 	for key, patharr := range p[denom] {
 		for _, path := range patharr {
-			ids2 := make([]uint64, 0, 10)
-			copy(ids2, oldids)
-			denoms2 := make([]string, 0, 10)
-			copy(denoms2, olddenoms)
 			depth2 := uint64(float64(path.GetDepth()) / ratio)
 			newrouters := make([]module.Router, 0, 0)
-			if !IsIdIn(ids2, path.ID) {
-				newrouters = p.FindPath(ctx, append(ids2, path.ID), MinDepth(depth2, depth), ratio*path.Ratio, append(denoms2, key), key)
+			if !IsIdIn(ids, path.ID) {
+				newrouters = p.FindPath(ctx, append(ids, path.ID), MinDepth(depth2, depth), ratio*path.Ratio, append(denoms, key), key)
 			}
 			routers = append(routers, newrouters...)
 		}
