@@ -100,7 +100,7 @@ func (p PoolMap) FindPath(ctx *tool.MyContext, oldids []uint64, depth uint64, ra
 			for _, path := range patharr {
 				depth2 := uint64(float64(path.GetDepth()) / ratio)
 				totalPath++
-				if ids[0] == 15 && ids[1] == 13 && ids[2] == 498 && ids[3] == 807 {
+				if ids[0] == 15 && ids[1] == 13 && ids[2] == 498 {
 					fmt.Println(append(ids, path.ID), "  ", MinDepth(depth2, depth), "  ", ratio*path.Ratio)
 				}
 				if ratio > 1 && depth > 1000000 {
