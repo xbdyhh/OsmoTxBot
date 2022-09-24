@@ -95,7 +95,7 @@ func (p PoolMap) FindPath(ctx *tool.MyContext, oldids []uint64, depth uint64, ra
 		}
 		return routers
 	}
-	if len(ids) > 4 {
+	if len(ids) > 3 {
 		if patharr, ok := p[denom][OSMO_DENOM]; ok {
 			for _, path := range patharr {
 				depth2 := uint64(float64(path.GetDepth()) / ratio)
@@ -283,7 +283,7 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 		if amountin == balAmount {
 			amountin -= osmo.GAS_FEE * uint64(len(v.PoolIds))
 		}
-		tokenMinOut := strconv.FormatUint(amountin, 10)
+		tokenMinOut := strconv.FormatUint(amountin+uint64(len(v.PoolIds))*osmo.GAS_FEE, 10)
 		//判断利润是否达标
 		if float64(amountin)*(v.Ratio-1) > float64(osmo.GAS_FEE*int64(len(v.PoolIds))) {
 			fmt.Printf("hope profit is: %v:amount is %d:ratio is %v:bal is %v:depth is %v \n",
