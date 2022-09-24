@@ -78,14 +78,14 @@ func (p PoolMap) FindProfitMargins(ctx *tool.MyContext, balance uint64) ([]modul
 }
 
 func (p PoolMap) FindPath(ctx *tool.MyContext, oldids []uint64, depth uint64, ratio float64, olddenoms []string, denom string) []module.Router {
+	ids := make([]uint64, 0, 10)
+	copy(ids, oldids)
 	routers := make([]module.Router, 0, 0)
-	ids := make([]uint64, 0, 0)
-	ids = append(ids, oldids...)
-	denoms := make([]string, 0, 0)
-	denoms = append(denoms, olddenoms...)
+	denoms := make([]string, 0, 10)
+	copy(denoms, olddenoms)
 	if len(denoms) != 0 && denoms[len(denoms)-1] == OSMO_DENOM {
 		totalPath++
-		if ratio > 1 && depth > 500000 {
+		if ratio > 1 && depth > 1000000 {
 			routers = append(routers, module.Router{
 				PoolIds:       ids,
 				TokenOutDenom: denoms,
@@ -95,7 +95,7 @@ func (p PoolMap) FindPath(ctx *tool.MyContext, oldids []uint64, depth uint64, ra
 		}
 		return routers
 	}
-	if len(ids) > 5 {
+	if len(ids) > 4 {
 		if patharr, ok := p[denom][OSMO_DENOM]; ok {
 			for _, path := range patharr {
 				depth2 := uint64(float64(path.GetDepth()) / ratio)
@@ -103,7 +103,7 @@ func (p PoolMap) FindPath(ctx *tool.MyContext, oldids []uint64, depth uint64, ra
 				if ids[0] == 15 && ids[1] == 13 && ids[2] == 498 && ids[3] == 807 {
 					fmt.Println(append(ids, path.ID), "  ", MinDepth(depth2, depth), "  ", ratio*path.Ratio)
 				}
-				if ratio > 1 && depth > 500000 {
+				if ratio > 1 && depth > 1000000 {
 					routers = append(routers, module.Router{
 						PoolIds:       append(ids, path.ID),
 						TokenOutDenom: append(denoms, OSMO_DENOM),
@@ -117,10 +117,14 @@ func (p PoolMap) FindPath(ctx *tool.MyContext, oldids []uint64, depth uint64, ra
 	}
 	for key, patharr := range p[denom] {
 		for _, path := range patharr {
+			ids2 := make([]uint64, 0, 10)
+			copy(ids2, oldids)
+			denoms2 := make([]string, 0, 10)
+			copy(denoms2, olddenoms)
 			depth2 := uint64(float64(path.GetDepth()) / ratio)
 			newrouters := make([]module.Router, 0, 0)
-			if !IsIdIn(ids, path.ID) {
-				newrouters = p.FindPath(ctx, append(ids, path.ID), MinDepth(depth2, depth), ratio*path.Ratio, append(denoms, key), key)
+			if !IsIdIn(ids2, path.ID) {
+				newrouters = p.FindPath(ctx, append(ids2, path.ID), MinDepth(depth2, depth), ratio*path.Ratio, append(denoms2, key), key)
 			}
 			routers = append(routers, newrouters...)
 		}
@@ -136,7 +140,6 @@ func IsIdIn(ids []uint64, id uint64) bool {
 		}
 	}
 	return false
-
 }
 
 var TransactionRouters []module.Router
