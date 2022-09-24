@@ -95,7 +95,7 @@ func (p PoolMap) FindPath(ctx *tool.MyContext, oldids []uint64, depth uint64, ra
 		}
 		return routers
 	}
-	if len(ids) > 4 {
+	if len(ids) > 5 {
 		if patharr, ok := p[denom][OSMO_DENOM]; ok {
 			for _, path := range patharr {
 				depth2 := uint64(float64(path.GetDepth()) / ratio)
@@ -114,23 +114,19 @@ func (p PoolMap) FindPath(ctx *tool.MyContext, oldids []uint64, depth uint64, ra
 			}
 		}
 		return routers
-	} else {
-		for key, patharr := range p[denom] {
-			for _, path := range patharr {
-				depth2 := uint64(float64(path.GetDepth()) / ratio)
-				newrouters := make([]module.Router, 0, 0)
-				if !IsIdIn(ids, path.ID) {
-					newrouters = p.FindPath(ctx, append(ids, path.ID), MinDepth(depth2, depth), ratio*path.Ratio, append(denoms, key), key)
-				}
-				if path.ID == 15 {
-					fmt.Println(ids)
-				}
-				routers = append(routers, newrouters...)
-			}
-		}
-		return routers
-
 	}
+	for key, patharr := range p[denom] {
+		for _, path := range patharr {
+			depth2 := uint64(float64(path.GetDepth()) / ratio)
+			newrouters := make([]module.Router, 0, 0)
+			if !IsIdIn(ids, path.ID) {
+				newrouters = p.FindPath(ctx, append(ids, path.ID), MinDepth(depth2, depth), ratio*path.Ratio, append(denoms, key), key)
+			}
+			routers = append(routers, newrouters...)
+		}
+	}
+	return routers
+
 }
 
 func IsIdIn(ids []uint64, id uint64) bool {
