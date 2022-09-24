@@ -119,8 +119,8 @@ func (p PoolMap) FindPath(ctx *tool.MyContext, oldids []uint64, depth uint64, ra
 		for _, path := range patharr {
 			depth2 := uint64(float64(path.GetDepth()) / ratio)
 			newrouters := make([]module.Router, 0, 0)
-			if path.ID == 498 {
-				fmt.Println(p[key])
+			if path.ID == 807 && ids[len(ids)-1] == 498 {
+				fmt.Println(append(ids, path.ID))
 			}
 			if !IsIdIn(ids, path.ID) {
 				newrouters = p.FindPath(ctx, append(ids, path.ID), MinDepth(depth2, depth), ratio*path.Ratio, append(denoms, key), key)
