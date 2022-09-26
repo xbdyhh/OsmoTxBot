@@ -95,7 +95,7 @@ func (p PoolMap) FindPath(ctx *tool.MyContext, oldids []uint64, depth uint64, ra
 		}
 		return routers
 	}
-	if len(ids) > 4 {
+	if len(ids) > 2 {
 		if patharr, ok := p[denom][OSMO_DENOM]; ok {
 			for _, path := range patharr {
 				depth2 := uint64(float64(path.GetDepth()) / ratio)
