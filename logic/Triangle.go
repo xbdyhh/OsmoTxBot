@@ -278,7 +278,7 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 		}
 		tokenMinOut := strconv.FormatUint(amountin+uint64(len(v.PoolIds))*osmo.GAS_FEE+200, 10)
 		//判断利润是否达标
-		if float64(amountin)*(v.Ratio-1) > float64(200+osmo.GAS_FEE*int64(len(v.PoolIds))) {
+		if float64(amountin)*(v.Ratio-1) > 10000 {
 			fmt.Printf("hope profit is: %v:amount is %d:ratio is %v:bal is %v:depth is %v,path is %v \n",
 				float64(amountin)*(v.Ratio-1), amountin, v.Ratio, balAmount, v.Depth, v.PoolIds)
 			ctx.Logger.Debugf("hope profit is: %v:amount is %d:ratio is %v\n", float64(amountin)*(v.Ratio-1), amountin-osmo.GAS_FEE*uint64(len(v.PoolIds))+200, v.Ratio)
