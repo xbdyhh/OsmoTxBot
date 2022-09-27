@@ -30,7 +30,7 @@ import (
 
 const (
 	GAS_BASE            = 40000
-	GAS_PERIOD          = 80000
+	GAS_PERIOD          = 60000
 	GRPC_SERVER_ADDRESS = "65.108.141.109:9090"
 	REST_ADDRESS        = "http://65.108.141.109:1317/"
 	CHAIN_ID            = "osmosis-1"
