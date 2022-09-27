@@ -29,7 +29,8 @@ import (
 )
 
 const (
-	GAS_LIMIT           = 360000
+	GAS_BASE            = 40000
+	GAS_PERIOD          = 80000
 	GRPC_SERVER_ADDRESS = "65.108.141.109:9090"
 	REST_ADDRESS        = "http://65.108.141.109:1317/"
 	CHAIN_ID            = "osmosis-1"
@@ -283,7 +284,7 @@ func SignTx(txBuilder client.TxBuilder, priv ctypes.PrivKey, sequence uint64, ac
 func SendOsmoTx(ctx *tool.MyContext, mnemonic, tokenInDemon, tokenOutMinAmtStr string, tokenInAmount uint64, sequence, accnum uint64,
 	routerids []uint64, routerdenoms []string, gas int64) (*sdk.TxResponse, error) {
 	txBuilder := Ccontext.TxConfig.NewTxBuilder()
-	txBuilder.SetGasLimit(GAS_LIMIT)
+	txBuilder.SetGasLimit(GAS_BASE + uint64(len(routerids))*GAS_PERIOD)
 	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewInt64Coin("uosmo", gas)))
 	priv, err := tool.NewPrivateKeyByMnemonic(mnemonic)
 	if err != nil {
