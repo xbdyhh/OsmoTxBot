@@ -181,6 +181,9 @@ func SortRouters(ctx *tool.MyContext, routers []module.Router) []module.Router {
 	newRouters := make([]module.Router, 0, 0)
 	newRouters = routers
 	sort.SliceStable(routers, func(i, j int) bool {
+		if len(routers[i].PoolIds) != len(routers[j].PoolIds) {
+			return len(routers[i].PoolIds) < len(routers[j].PoolIds)
+		}
 		return float64(routers[i].Depth)*routers[i].Ratio > float64(routers[j].Depth)*routers[j].Ratio
 	})
 	return newRouters
