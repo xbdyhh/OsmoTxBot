@@ -29,13 +29,13 @@ import (
 )
 
 const (
-	GAS_BASE            = 40000
+	GAS_BASE            = 20000
 	GAS_PERIOD          = 80000
 	GRPC_SERVER_ADDRESS = "65.108.141.109:9090"
 	REST_ADDRESS        = "http://65.108.141.109:1317/"
 	CHAIN_ID            = "osmosis-1"
 	ACCOUNT_ADDR        = "osmo16kydz6vznpgtpgws733panrs6atdsefcfxa97j"
-	GAS_FEE             = 400
+	GAS_FEE             = 1
 )
 
 var Ccontext = client.Context{}.WithChainID(CHAIN_ID)

@@ -274,15 +274,15 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 	for i, v := range TransactionRouters {
 		amountin := Min(v.Depth, balAmount)
 		if amountin == balAmount {
-			amountin -= osmo.GAS_FEE*uint64(len(v.PoolIds)) + 200
+			amountin -= osmo.GAS_FEE*uint64(len(v.PoolIds)) + 2500
 		}
-		tokenMinOut := strconv.FormatUint(amountin+uint64(len(v.PoolIds))*osmo.GAS_FEE+200, 10)
+		tokenMinOut := strconv.FormatUint(amountin+uint64(len(v.PoolIds))*osmo.GAS_FEE+2500, 10)
 		//判断利润是否达标
 		if float64(amountin)*(v.Ratio-1) > 10000 {
 			fmt.Printf("hope profit is: %v:amount is %d:ratio is %v:bal is %v:depth is %v,path is %v \n",
 				float64(amountin)*(v.Ratio-1), amountin, v.Ratio, balAmount, v.Depth, v.PoolIds)
-			ctx.Logger.Debugf("hope profit is: %v:amount is %d:ratio is %v\n", float64(amountin)*(v.Ratio-1), amountin-osmo.GAS_FEE*uint64(len(v.PoolIds))+200, v.Ratio)
-			resp, err := osmo.SendOsmoTx(ctx, MNEMONIC, OSMO_DENOM, tokenMinOut, amountin, seq, accnum, v.PoolIds, v.TokenOutDenom, int64(osmo.GAS_FEE*uint64(len(v.PoolIds))+200))
+			ctx.Logger.Debugf("hope profit is: %v:amount is %d:ratio is %v\n", float64(amountin)*(v.Ratio-1), amountin-osmo.GAS_FEE*uint64(len(v.PoolIds))+2500, v.Ratio)
+			resp, err := osmo.SendOsmoTx(ctx, MNEMONIC, OSMO_DENOM, tokenMinOut, amountin, seq, accnum, v.PoolIds, v.TokenOutDenom, int64(osmo.GAS_FEE*uint64(len(v.PoolIds))+2500))
 			if err != nil {
 				ctx.Logger.Errorf("%d tx err:%v", i, err)
 				continue
@@ -291,7 +291,7 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 				continue
 			} else if resp.Code == 0 {
 				seq++
-				balAmount -= amountin + osmo.GAS_FEE + uint64(len(v.PoolIds))
+				balAmount -= amountin + osmo.GAS_FEE*uint64(len(v.PoolIds)) + 2500
 				txs = append(txs, resp.TxHash)
 
 			} else if resp.Code == 32 {
