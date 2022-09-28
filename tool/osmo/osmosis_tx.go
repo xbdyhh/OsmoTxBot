@@ -68,6 +68,21 @@ func IsSendSuccess(ctx *tool.MyContext, hashes ...string) (bool, error) {
 	return true, nil
 }
 
+func QueryHeight(ctx *tool.MyContext) (string, error) {
+	res, err := http.Get(REST_ADDRESS + "/validatorsets/latest")
+	defer res.Body.Close()
+	if err != nil {
+		return "", err
+	}
+	respByte, err := ioutil.ReadAll(res.Body)
+	block := &module.BlockInfo{}
+	json.Unmarshal(respByte, block)
+	if res.StatusCode != 200 {
+		return "can't find the latest block!!!", nil
+	}
+	return block.Result.BlockHeight, nil
+}
+
 func QuerySimulate(ctx *tool.MyContext, body []byte) (bool, error) {
 	txmsg := &module.TxMsg{}
 	err := json.Unmarshal(body, txmsg)
@@ -282,10 +297,11 @@ func SignTx(txBuilder client.TxBuilder, priv ctypes.PrivKey, sequence uint64, ac
 }
 
 func SendOsmoTx(ctx *tool.MyContext, mnemonic, tokenInDemon, tokenOutMinAmtStr string, tokenInAmount uint64, sequence, accnum uint64,
-	routerids []uint64, routerdenoms []string, gas int64) (*sdk.TxResponse, error) {
+	routerids []uint64, routerdenoms []string, gas int64, memo string) (*sdk.TxResponse, error) {
 	txBuilder := Ccontext.TxConfig.NewTxBuilder()
 	txBuilder.SetGasLimit(GAS_BASE + uint64(len(routerids))*GAS_PERIOD)
 	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewInt64Coin("uosmo", gas)))
+	txBuilder.SetMemo(memo)
 	priv, err := tool.NewPrivateKeyByMnemonic(mnemonic)
 	if err != nil {
 		return nil, err

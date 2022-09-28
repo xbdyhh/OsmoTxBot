@@ -270,6 +270,7 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 	if err != nil {
 		ctx.Logger.Errorf("%v", err)
 	}
+	memo, err := osmo.QueryHeight(ctx)
 	txs := make([]string, 0, 0)
 	for i, v := range TransactionRouters {
 		amountin := Min(v.Depth, balAmount)
@@ -281,8 +282,10 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 		if float64(amountin)*(v.Ratio-1) > 10000 {
 			fmt.Printf("hope profit is: %v:amount is %d:ratio is %v:bal is %v:depth is %v,path is %v \n",
 				float64(amountin)*(v.Ratio-1), amountin, v.Ratio, balAmount, v.Depth, v.PoolIds)
-			ctx.Logger.Debugf("hope profit is: %v:amount is %d:ratio is %v\n", float64(amountin)*(v.Ratio-1), amountin-osmo.GAS_FEE*uint64(len(v.PoolIds))+2500, v.Ratio)
-			resp, err := osmo.SendOsmoTx(ctx, MNEMONIC, OSMO_DENOM, tokenMinOut, amountin, seq, accnum, v.PoolIds, v.TokenOutDenom, int64(osmo.GAS_FEE*uint64(len(v.PoolIds))+2500))
+			ctx.Logger.Debugf("hope profit is: %v:amount is %d:ratio is %v\n", float64(amountin)*(v.Ratio-1),
+				amountin-osmo.GAS_FEE*uint64(len(v.PoolIds))+2500, v.Ratio)
+			resp, err := osmo.SendOsmoTx(ctx, MNEMONIC, OSMO_DENOM, tokenMinOut, amountin, seq, accnum, v.PoolIds,
+				v.TokenOutDenom, int64(osmo.GAS_FEE*uint64(len(v.PoolIds))+2500), memo)
 			if err != nil {
 				ctx.Logger.Errorf("%d tx err:%v", i, err)
 				continue

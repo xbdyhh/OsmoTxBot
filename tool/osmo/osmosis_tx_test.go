@@ -52,22 +52,31 @@ func TestQueryOsmoBalanceInfo(t *testing.T) {
 //		[]string{"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2", "uosmo"})
 //}
 
-func TestIsOsmoSuccess(t *testing.T) {
+//func TestIsOsmoSuccess(t *testing.T) {
+//	InitCcontext()
+//	ctx := tool.InitMyContext()
+//	ok, err := IsSendSuccess(ctx, "BBFBEFC889E1B506612405F3F88982AA333D928A3D0430D586012DB933B651B8", "7228BA7DCD97099E9E2F72EAE976D804541D54E0914AA38FB24ABC4816BAFF05")
+//	if err != nil || !ok {
+//		t.Errorf("an err happend%v", err)
+//	}
+//}
+//
+//func TestQuerySimulate(t *testing.T) {
+//	InitCcontext()
+//	ctx := tool.InitMyContext()
+//	jsonmsg := "{\"body\":{\"messages\":[{\"@type\":\"/osmosis.gamm.v1beta1.MsgSwapExactAmountIn\",\"sender\":\"osmo16kydz6vznpgtpgws733panrs6atdsefcfxa97j\",\"routes\":[{\"poolId\":\"1\",\"tokenOutDenom\":\"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2\"},{\"poolId\":\"22\",\"tokenOutDenom\":\"ibc/1DCC8A6CB5689018431323953344A9F6CC4D0BFB261E88C9F7777372C10CD076\"},{\"poolId\":\"42\",\"tokenOutDenom\":\"uosmo\"}],\"tokenIn\":{\"denom\":\"uosmo\",\"amount\":\"10535414\"},\"tokenOutMinAmount\":\"1\"}],\"memo\":\"\",\"timeout_height\":\"0\",\"extension_options\":[],\"non_critical_extension_options\":[]},\"auth_info\":{\"signer_infos\":[{\"public_key\":{\"@type\":\"/cosmos.crypto.secp256k1.PubKey\",\"key\":\"ArBXS3ckpnjWCSVsPsGddT5veYQiQjcBeuDGH6zkPvAC\"},\"mode_info\":{\"single\":{\"mode\":\"SIGN_MODE_DIRECT\"}},\"sequence\":\"10415\"}],\"fee\":{\"amount\":[],\"gas_limit\":\"1000000\",\"payer\":\"\",\"granter\":\"\"}},\"signatures\":[\"K3cgv1iZmQba0tq37KU4UoLXSDfHI4ZWmpTa2KTOttM3jWENL3/8juECrh8A5Y0KbHD6jr7l51jVlRYldzUvFw==\"]}"
+//	ok, err := QuerySimulate(ctx, []byte(jsonmsg))
+//	if err != nil || !ok {
+//		t.Errorf("an err happend%v", err)
+//	}
+//
+//}
+func TestQueryHeight(t *testing.T) {
 	InitCcontext()
 	ctx := tool.InitMyContext()
-	ok, err := IsSendSuccess(ctx, "BBFBEFC889E1B506612405F3F88982AA333D928A3D0430D586012DB933B651B8", "7228BA7DCD97099E9E2F72EAE976D804541D54E0914AA38FB24ABC4816BAFF05")
-	if err != nil || !ok {
+	s, err := QueryHeight(ctx)
+	if err != nil {
 		t.Errorf("an err happend%v", err)
 	}
-}
-
-func TestQuerySimulate(t *testing.T) {
-	InitCcontext()
-	ctx := tool.InitMyContext()
-	jsonmsg := "{\"body\":{\"messages\":[{\"@type\":\"/osmosis.gamm.v1beta1.MsgSwapExactAmountIn\",\"sender\":\"osmo16kydz6vznpgtpgws733panrs6atdsefcfxa97j\",\"routes\":[{\"poolId\":\"1\",\"tokenOutDenom\":\"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2\"},{\"poolId\":\"22\",\"tokenOutDenom\":\"ibc/1DCC8A6CB5689018431323953344A9F6CC4D0BFB261E88C9F7777372C10CD076\"},{\"poolId\":\"42\",\"tokenOutDenom\":\"uosmo\"}],\"tokenIn\":{\"denom\":\"uosmo\",\"amount\":\"10535414\"},\"tokenOutMinAmount\":\"1\"}],\"memo\":\"\",\"timeout_height\":\"0\",\"extension_options\":[],\"non_critical_extension_options\":[]},\"auth_info\":{\"signer_infos\":[{\"public_key\":{\"@type\":\"/cosmos.crypto.secp256k1.PubKey\",\"key\":\"ArBXS3ckpnjWCSVsPsGddT5veYQiQjcBeuDGH6zkPvAC\"},\"mode_info\":{\"single\":{\"mode\":\"SIGN_MODE_DIRECT\"}},\"sequence\":\"10415\"}],\"fee\":{\"amount\":[],\"gas_limit\":\"1000000\",\"payer\":\"\",\"granter\":\"\"}},\"signatures\":[\"K3cgv1iZmQba0tq37KU4UoLXSDfHI4ZWmpTa2KTOttM3jWENL3/8juECrh8A5Y0KbHD6jr7l51jVlRYldzUvFw==\"]}"
-	ok, err := QuerySimulate(ctx, []byte(jsonmsg))
-	if err != nil || !ok {
-		t.Errorf("an err happend%v", err)
-	}
-
+	fmt.Println(s)
 }
