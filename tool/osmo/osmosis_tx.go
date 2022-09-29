@@ -69,7 +69,7 @@ func IsSendSuccess(ctx *tool.MyContext, hashes ...string) (bool, error) {
 }
 
 func QueryHeight(ctx *tool.MyContext) (string, error) {
-	res, err := http.Get(REST_ADDRESS + "/validatorsets/latest")
+	res, err := http.Get(REST_ADDRESS + "blocks/latest")
 	defer res.Body.Close()
 	if err != nil {
 		return "", err
@@ -80,7 +80,8 @@ func QueryHeight(ctx *tool.MyContext) (string, error) {
 	if res.StatusCode != 200 {
 		return "can't find the latest block!!!", nil
 	}
-	return block.Result.BlockHeight, nil
+	fmt.Println(block)
+	return block.Block.Header.Height, nil
 }
 
 func QuerySimulate(ctx *tool.MyContext, body []byte) (bool, error) {
