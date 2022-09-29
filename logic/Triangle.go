@@ -151,6 +151,7 @@ func FreshPoolMap(ctx *tool.MyContext) {
 		totalPath = 0
 		pMap := NewPoolMap(ctx)
 		//拉取数据
+		memo, err := osmo.QueryHeight(ctx)
 		res, err := osmo.QueryOsmoPoolInfo(ctx)
 		if err != nil {
 			ctx.Logger.Errorf("pull pools err:%v", err)
@@ -173,7 +174,7 @@ func FreshPoolMap(ctx *tool.MyContext) {
 		//组合过滤
 		TransactionRouters = SortRouters(ctx, routers)
 		ctx.Logger.Debugf("Finally transaction routers is:%v\n", routers)
-		SendOsmoTriTx(ctx)
+		SendOsmoTriTx(ctx, memo)
 	}
 }
 
@@ -233,7 +234,7 @@ func MinDepth(uis ...uint64) uint64 {
 	return ans
 }
 
-func SendOsmoTriTx(ctx *tool.MyContext) {
+func SendOsmoTriTx(ctx *tool.MyContext, memo string) {
 	priv, err := tool.NewPrivateKeyByMnemonic(MNEMONIC)
 	if err != nil {
 
@@ -273,7 +274,6 @@ func SendOsmoTriTx(ctx *tool.MyContext) {
 	if err != nil {
 		ctx.Logger.Errorf("%v", err)
 	}
-	memo, err := osmo.QueryHeight(ctx)
 	txs := make([]string, 0, 0)
 	for i, v := range TransactionRouters {
 		amountin := Min(v.Depth, balAmount)
