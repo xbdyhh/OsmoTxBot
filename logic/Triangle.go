@@ -72,7 +72,7 @@ func (p PoolMap) FindProfitMargins(ctx *tool.MyContext, balance uint64) ([]modul
 	routers := make([]module.Router, 0, 0)
 	ids := make([]uint64, 0, 0)
 	denoms := make([]string, 0, 0)
-	routers = p.FindPath(ctx, ids, 1000000000, 1, denoms, OSMO_DENOM)
+	routers = p.FindPath(ctx, ids, 1500000000, 1, denoms, OSMO_DENOM)
 	fmt.Println("total paths is:", totalPath)
 	return routers, nil
 }
@@ -85,7 +85,7 @@ func (p PoolMap) FindPath(ctx *tool.MyContext, oldids []uint64, depth uint64, ra
 	copy(denoms, olddenoms)
 	if len(denoms) != 0 && denoms[len(denoms)-1] == OSMO_DENOM {
 		totalPath++
-		if ratio > 1 && depth > 1000000 {
+		if ratio > 1 && depth > 500000 {
 			routers = append(routers, module.Router{
 				PoolIds:       ids,
 				TokenOutDenom: denoms,
@@ -95,12 +95,12 @@ func (p PoolMap) FindPath(ctx *tool.MyContext, oldids []uint64, depth uint64, ra
 		}
 		return routers
 	}
-	if len(ids) > 2 {
+	if len(ids) >= 2 {
 		if patharr, ok := p[denom][OSMO_DENOM]; ok {
 			for _, path := range patharr {
 				depth2 := uint64(float64(path.GetDepth()) / ratio)
 				totalPath++
-				if ratio > 1 && depth > 1000000 {
+				if ratio > 1 && depth > 500000 {
 					routers = append(routers, module.Router{
 						PoolIds:       append(ids, path.ID),
 						TokenOutDenom: append(denoms, OSMO_DENOM),
@@ -282,7 +282,7 @@ func SendOsmoTriTx(ctx *tool.MyContext, memo string) {
 		}
 		tokenMinOut := strconv.FormatUint(amountin+uint64(len(v.PoolIds))*osmo.GAS_FEE+2500, 10)
 		//判断利润是否达标
-		if float64(amountin)*(v.Ratio-1) > 10000 {
+		if float64(amountin)*(v.Ratio-1) > 5000 {
 			fmt.Printf("hope profit is: %v:amount is %d:ratio is %v:bal is %v:depth is %v,path is %v \n",
 				float64(amountin)*(v.Ratio-1), amountin, v.Ratio, balAmount, v.Depth, v.PoolIds)
 			ctx.Logger.Debugf("hope profit is: %v:amount is %d:ratio is %v\n", float64(amountin)*(v.Ratio-1),
