@@ -10,5 +10,5 @@ func TestFreshPoolMap(t *testing.T) {
 	ctx := tool.InitMyContext()
 	osmo.InitCcontext()
 	FreshPoolMap(ctx)
-	SendOsmoTriTx(ctx)
+	SendOsmoTriTx(ctx, "test")
 }
