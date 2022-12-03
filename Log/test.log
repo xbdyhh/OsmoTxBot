@@ -7,3 +7,5 @@
 2022-09-14T23:45:34.237+0800	ERROR	logic/Triangle.go:320	rpc error: code = NotFound desc = account osmo1pcqxejct48wyj9ca9v9ug2l97axmpfwmtp3nsn not found
 2022-09-14T23:45:39.272+0800	ERROR	logic/Triangle.go:320	rpc error: code = NotFound desc = account osmo1pcqxejct48wyj9ca9v9ug2l97axmpfwmtp3nsn not found
 2022-09-14T23:45:59.273+0800	ERROR	logic/Triangle.go:212	pull pools err:rpc error: code = Unavailable desc = timed out waiting for server handshake
+2022-12-03T21:56:06.522+0800	INFO	logic/Triangle.go:368	finish send msg!!!tx is:%!(EXTRA []string=[])
+2022-12-03T22:20:32.738+0800	INFO	logic/Triangle.go:366	finish send msg!!!tx is:%!(EXTRA []string=[])

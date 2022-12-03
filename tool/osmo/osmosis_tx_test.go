@@ -6,26 +6,25 @@ import (
 	"testing"
 )
 
-//func TestQueryOsmoAccountInfo(t *testing.T) {
-//	InitCcontext()
-//	ctx := tool.InitMyContext()
-//	acc, err := QueryOsmoAccountInfo(ctx, "osmo1w3t6kvkvhudyrcvveu9yzyh3sv7ykpst24rc4p")
-//	if err != nil {
-//		t.Errorf("an err happend%v", err)
+//	func TestQueryOsmoAccountInfo(t *testing.T) {
+//		InitCcontext()
+//		ctx := tool.InitMyContext()
+//		acc, err := QueryOsmoAccountInfo(ctx, "osmo1w3t6kvkvhudyrcvveu9yzyh3sv7ykpst24rc4p")
+//		if err != nil {
+//			t.Errorf("an err happend%v", err)
+//		}
+//		fmt.Println(acc.Account.Sequence)
 //	}
-//	fmt.Println(acc.Account.Sequence)
-//}
-//
-//func TestQueryOsmoBalanceInfo(t *testing.T) {
-//	InitCcontext()
-//	ctx := tool.InitMyContext()
-//	bal, err := QueryOsmoBalanceInfo(ctx, "osmo1w3t6kvkvhudyrcvveu9yzyh3sv7ykpst24rc4p")
-//	if err != nil {
-//		t.Errorf("an err happend%v", err)
-//	}
-//	amount, err := bal.Get("uosmo")
-//	fmt.Println(amount)
-//}
+func TestQueryOsmoBalanceInfo(t *testing.T) {
+	InitCcontext()
+	ctx := tool.InitMyContext()
+	bal, err := QueryOsmoBalanceInfo(ctx, "osmo1w3t6kvkvhudyrcvveu9yzyh3sv7ykpst24rc4p")
+	if err != nil {
+		t.Errorf("an err happend%v", err)
+	}
+	amount, err := bal.Get("uosmo")
+	fmt.Println(amount)
+}
 
 //func TestQueryOSMOPoolInfo(t *testing.T) {
 //	InitCcontext()
@@ -34,7 +33,7 @@ import (
 //	if err != nil {
 //		t.Errorf("%v", err)
 //	}
-//	fmt.Println(len(pool.Pools))
+//	fmt.Println(pool.Pools[0])
 //}
 
 //func TestSendTx(t *testing.T) {
@@ -81,14 +80,14 @@ import (
 //	fmt.Println(s)
 //}
 
-func TestGetMemPoolTx(t *testing.T) {
-	InitCcontext()
-	ctx := tool.InitMyContext()
-	s, err := GetMemPoolTx(ctx)
-	if err != nil {
-		t.Errorf("an err happend%v", err)
-	}
-	for _, v := range s {
-		fmt.Println(v)
-	}
-}
+//func TestGetMemPoolTx(t *testing.T) {
+//	InitCcontext()
+//	ctx := tool.InitMyContext()
+//	s, err := GetMemPoolTx(ctx)
+//	if err != nil {
+//		t.Errorf("an err happend%v", err)
+//	}
+//	for _, v := range s {
+//		fmt.Println(v)
+//	}
+//}
