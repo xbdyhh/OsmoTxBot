@@ -14,7 +14,7 @@ import (
 
 const (
 	MNEMONIC   = ""
-	OSMO_DENOM = "ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858"
+	OSMO_DENOM = "uosmo"
 )
 
 var totalPath = 0
@@ -55,7 +55,55 @@ func (p PoolMap) FreshMap(ctx *tool.MyContext, pools []module.Pool) {
 			}
 		}
 	}
+
 	ctx.Logger.Debug("fresh pools map done.")
+}
+
+func (p PoolMap) AddMemTxToMap(ctx *tool.MyContext) {
+	memtxs, err := osmo.GetMemPoolTx(ctx)
+	if err != nil {
+		ctx.Logger.Errorf("get memtxs err:%v", err)
+	}
+	for _, messages := range memtxs {
+		for _, msg := range messages.Body.Messages {
+			if msg.Type == osmo.MEM_TX_IN {
+				from := msg.TokenIn.Denom
+				to := msg.Routes[0].TokenOutDenom
+				amount, _ := strconv.ParseFloat(msg.TokenIn.Amount, 64)
+				for _, v := range msg.Routes {
+					id, _ := strconv.ParseUint(v.PoolID, 10, 64)
+					to = v.TokenOutDenom
+					for _, path := range p[from][to] {
+						if path.ID == id {
+							path.AmountFrom = path.AmountFrom + amount
+							amount = amount * path.Ratio
+							path.AmountTo = path.AmountTo - amount
+							path.GetRatio()
+						}
+					}
+					from = to
+				}
+			}
+			if msg.Type == osmo.MEM_TX_OUT {
+				from := msg.Routes[0].TokenInDenom
+				to := msg.TokenOut.Denom
+				amount, _ := strconv.ParseFloat(msg.TokenOut.Amount, 64)
+				for _, v := range msg.Routes {
+					from = v.TokenInDenom
+					id, _ := strconv.ParseUint(v.PoolID, 10, 64)
+					for _, path := range p[from][to] {
+						if path.ID == id {
+							path.AmountTo = path.AmountTo - amount
+							amount = amount / path.Ratio
+							path.AmountFrom = path.AmountFrom + amount
+							path.GetRatio()
+						}
+					}
+					to = from
+				}
+			}
+		}
+	}
 }
 
 func IsPoolIn(ids []module.Path, id uint64) bool {
