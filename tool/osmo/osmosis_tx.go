@@ -1,6 +1,7 @@
 package osmo
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -15,9 +16,9 @@ import (
 	asigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	atypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/osmosis-labs/osmosis/v11/app"
-	"github.com/osmosis-labs/osmosis/v11/x/gamm/types"
-	ptypes "github.com/osmosis-labs/osmosis/v11/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v12/app"
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	ptypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 	"github.com/xbdyhh/OsmoTxBot/tool"
 	"github.com/xbdyhh/OsmoTxBot/tool/module"
 	"google.golang.org/grpc"
@@ -33,9 +34,13 @@ const (
 	GAS_PERIOD          = 80000
 	GRPC_SERVER_ADDRESS = "65.108.141.109:9090"
 	REST_ADDRESS        = "http://65.108.141.109:1317/"
+	RPC                 = "http://65.108.141.109:26657/"
 	CHAIN_ID            = "osmosis-1"
 	ACCOUNT_ADDR        = "osmo16kydz6vznpgtpgws733panrs6atdsefcfxa97j"
 	GAS_FEE             = 2
+
+	MEM_TX_IN  = "/osmosis.gamm.v1beta1.MsgSwapExactAmountIn"
+	MEM_TX_OUT = "/osmosis.gamm.v1beta1.MsgSwapExactAmountOut"
 )
 
 var Ccontext = client.Context{}.WithChainID(CHAIN_ID)
@@ -68,13 +73,44 @@ func IsSendSuccess(ctx *tool.MyContext, hashes ...string) (bool, error) {
 	return true, nil
 }
 
+func GetMemPoolTx(ctx *tool.MyContext) ([]*module.MemTx, error) {
+	res, err := http.Get(RPC + "unconfirmed_txs")
+	defer res.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+	respByte, err := io.ReadAll(res.Body)
+	MemTx := &module.MemTxs{}
+	json.Unmarshal(respByte, MemTx)
+	if err != nil {
+		return nil, err
+	}
+	MemTxs := make([]*module.MemTx, 0, 0)
+	for _, rawTx := range MemTx.Result.Txs {
+		txBytes, err := base64.StdEncoding.DecodeString(rawTx)
+		tx, err := Ccontext.TxConfig.TxDecoder()(txBytes)
+		if err != nil {
+			return nil, err
+		}
+		js, err := Ccontext.TxConfig.TxJSONEncoder()(tx)
+		newtx := &module.MemTx{}
+		json.Unmarshal(js, newtx)
+		for _, v := range newtx.Body.Messages {
+			if v.Type == MEM_TX_IN || v.Type == MEM_TX_OUT {
+				MemTxs = append(MemTxs, newtx)
+			}
+		}
+	}
+	return MemTxs, nil
+}
+
 func QueryHeight(ctx *tool.MyContext) (string, error) {
 	res, err := http.Get(REST_ADDRESS + "blocks/latest")
 	defer res.Body.Close()
 	if err != nil {
 		return "", err
 	}
-	respByte, err := ioutil.ReadAll(res.Body)
+	respByte, err := io.ReadAll(res.Body)
 	block := &module.BlockInfo{}
 	json.Unmarshal(respByte, block)
 	if res.StatusCode != 200 {
